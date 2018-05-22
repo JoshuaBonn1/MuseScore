@@ -378,5 +378,45 @@ void Preferences::clearMidiRemote(int recordId)
       remove(baseKey);
       }
 
+std::unordered_map<std::string, Preference> Preferences::getWorkspaceRelevantPreferences() {
+      std::unordered_map<std::string, Preference> ui_preferences;
+      std::vector<std::string> ui_preferences_vector;
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_BG_USECOLOR);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_FG_USECOLOR);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_BG_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_FG_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_BG_WALLPAPER);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_FG_WALLPAPER);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_MISC_ANTIALIASEDDRAWING);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_MISC_SELECTIONPROXIMITY);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_SCROLL_LIMITSCROLLAREA);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_SCROLL_VERTICALORIENTATION);
+      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_CHECKUPDATE);
+      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_SHOWNAVIGATOR);
+      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_SHOWPLAYPANEL);
+      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_SHOWSPLASHSCREEN);
+      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_SHOWSTARTCENTER);
+      //ui_preferences_vector.push_back(PREF_UI_APP_GLOBALSTYLE);
+      ui_preferences_vector.push_back(PREF_UI_APP_LANGUAGE);
+      ui_preferences_vector.push_back(PREF_UI_APP_RASTER_HORIZONTAL);
+      ui_preferences_vector.push_back(PREF_UI_APP_RASTER_VERTICAL);
+      ui_preferences_vector.push_back(PREF_UI_APP_SHOWSTATUSBAR);
+      ui_preferences_vector.push_back(PREF_UI_APP_USENATIVEDIALOGS);
+      ui_preferences_vector.push_back(PREF_UI_PIANO_HIGHLIGHTCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_NOTE_DROPCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_DEFAULTCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_FRAMEMARGINCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_LAYOUTBREAKCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE1_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE2_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE3_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE4_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_THEME_ICONWIDTH);
+      ui_preferences_vector.push_back(PREF_UI_THEME_ICONHEIGHT);
+      for (auto pref : ui_preferences_vector)
+            ui_preferences.insert({{pref, get(QString::fromStdString(pref))}});
+      return ui_preferences;
+      }
+
 
 } // namespace Ms

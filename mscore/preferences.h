@@ -264,6 +264,8 @@ class Preferences {
       MidiRemote midiRemote(int recordId) const;
       void updateMidiRemote(int recordId, MidiRemoteType type, int data);
       void clearMidiRemote(int recordId);
+
+      std::unordered_map<std::string, Preference> getWorkspaceRelevantPreferences();
       };
 
 extern Preferences preferences;

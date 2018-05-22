@@ -318,6 +318,15 @@ void Workspace::write()
             xml.tag("action", i);
       xml.etag();
 
+      xml.stag("Preferences");
+      for (auto pref : preferences.getWorkspaceRelevantPreferences()) {
+            if (pref.second.defaultValue().isValid()) {
+                  QString pref_first = QString::fromStdString(pref.first);
+                  xml.tag("Preference name=\"" + pref_first + "\"", pref.second.defaultValue());
+                  }
+            }
+      xml.etag();
+
       xml.etag();
       xml.etag();
       f.addFile("workspace.xml", cbuf.data());
