@@ -209,6 +209,7 @@ void MuseScore::changeWorkspace(Workspace* p)
       Workspace::currentWorkspace->save();
       p->read();
       Workspace::currentWorkspace = p;
+      preferencesChanged();
       }
 
 //---------------------------------------------------------
@@ -396,6 +397,7 @@ void Workspace::read()
                         }
                   }
             }
+      preferences.save();
       }
 
 void Workspace::read(XmlReader& e)
@@ -436,6 +438,47 @@ void Workspace::read(XmlReader& e)
                         mscore->setNoteInputMenuEntries(l);
                         mscore->populateNoteInputMenu();
                         niToolbar = true;
+                        }
+                  }
+            else if (tag == "Preferences") {
+                  while (e.readNextStartElement()) {
+                        QString preference_name = e.attribute("name");
+                        switch (preferences.defaultValue(preference_name).type()) {
+                              case QVariant::Int:
+                                    {
+                                    int new_int = e.readInt();
+                                    qDebug() << preference_name << " = " << new_int;
+                                    preferences.setPreference(preference_name, new_int);
+                                    }
+                                    break;
+                              case QVariant::Color:
+                                    {
+                                    QColor new_color = e.readColor();
+                                    qDebug() << preference_name << " = " << new_color;
+
+                                    preferences.setPreference(preference_name, new_color);
+                                    }
+                                    break;
+                              case QVariant::String:
+                                    {
+                                    QString new_string = e.readXml();
+                                    qDebug() << preference_name << " = " << new_string;
+
+                                    preferences.setPreference(preference_name, new_string);
+                                    }
+                                    break;
+                              case QVariant::Bool:
+                                    {
+                                    bool new_bool = e.readBool();
+                                    qDebug() << preference_name << " = " << new_bool;
+
+                                    preferences.setPreference(preference_name, new_bool);
+                                    }
+                                    break;
+                              default:
+                                    qDebug() << preferences.defaultValue(preference_name).type() << " not handled.";
+                                    e.unknown();
+                              }
                         }
                   }
             else
