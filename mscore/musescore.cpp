@@ -933,6 +933,7 @@ void MuseScore::populateDefaultMenuBar()
       QMenu* menuStretch = new QMenu(tr("&Stretch"));
       for (auto i : { "stretch+", "stretch-", "reset-stretch" })
             menuStretch->addAction(getAction(i));
+      Workspace::addMenuAndString(menuStretch, "menu-stretch");
       menuFormat->addMenu(menuStretch);
       menuFormat->addSeparator();
 
@@ -1027,6 +1028,7 @@ void MuseScore::populateDefaultMenuBar()
       a->setCheckable(true);
       a->setChecked(MScore::autoplaceSlurs);
       menuDebug->addAction(a);
+      Workspace::addMenuAndString(menuDebug, "menu-debug");
 #endif
 
       //---------------------
@@ -1087,6 +1089,27 @@ void MuseScore::populateDefaultMenuBar()
       revertToFactoryAction = menuHelp->addAction("", this, SLOT(resetAndRestart()));
       Workspace::addActionAndString(revertToFactoryAction, "revert-factory");
       Workspace::addRemainingFromMenuBar(mb);
+
+      // Add all menus to workspace for loading
+      Workspace::addMenuAndString(menuFile, "menu-file");
+      Workspace::addMenuAndString(openRecent, "menu-open-recent");
+      Workspace::addMenuAndString(menuEdit, "menu-edit");
+      Workspace::addMenuAndString(menuView, "menu-view");
+      Workspace::addMenuAndString(menuToolbars, "menu-toolbars");
+      Workspace::addMenuAndString(menuWorkspaces, "menu-workspaces");
+      Workspace::addMenuAndString(menuAdd, "menu-add");
+      Workspace::addMenuAndString(menuAddMeasures, "menu-add-measures");
+      Workspace::addMenuAndString(menuAddFrames, "menu-add-frames");
+      Workspace::addMenuAndString(menuAddText, "menu-add-text");
+      Workspace::addMenuAndString(menuAddLines, "menu-add-lines");
+      Workspace::addMenuAndString(menuAddPitch, "menu-add-pitch");
+      Workspace::addMenuAndString(menuAddInterval, "menu-add-interval");
+      Workspace::addMenuAndString(menuTuplet, "menu-tuplet");
+      Workspace::addMenuAndString(menuFormat, "menu-format");
+      Workspace::addMenuAndString(menuTools, "menu-tools");
+      Workspace::addMenuAndString(menuVoices, "menu-voices");
+      Workspace::addMenuAndString(menuPlugins, "menu-plugins");
+      Workspace::addMenuAndString(menuHelp, "menu-help");
       }
 
 //---------------------------------------------------------

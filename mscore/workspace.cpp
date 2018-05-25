@@ -48,6 +48,8 @@ QList<Workspace*> Workspace::_workspaces {
 
 QList<QPair<QAction*, QString>> Workspace::actionToStringList {};
 
+QList<QPair<QMenu*, QString>> Workspace::menuToStringList {};
+
 //---------------------------------------------------------
 //   undoWorkspace
 //---------------------------------------------------------
@@ -352,7 +354,7 @@ void Workspace::writeMenuBar(QBuffer* cbuf) {
                   xml.tag("action", "");
             else if (action->menu()) {
 //                  QString str = Shortcut::findShortcutFromText(action->text());
-                  xml.stag("Menu name=\"" + action->text().remove('&') + "\"");
+                  xml.stag("Menu name=\"" + findStringFromMenu(action->menu()) + "\"");
                   writeMenu(cbuf, action->menu());
                   xml.etag();
                   }
@@ -370,7 +372,7 @@ void Workspace::writeMenu(QBuffer* cbuf, QMenu* menu) {
                   xml.tag("action", "");
             else if (action->menu()) {
 //                  QString str = Shortcut::findShortcutFromText(action->text());
-                  xml.stag("Menu name=\"" + action->text().remove('&') + "\"");
+                  xml.stag("Menu name=\"" + findStringFromMenu(action->menu()) + "\"");
                   writeMenu(cbuf, action->menu());
                   xml.etag();
                   }
@@ -523,12 +525,83 @@ void Workspace::read(XmlReader& e)
                               }
                         }
                   }
+            else if (tag == "MenuBar") {
+                  QMenuBar* mb = mscore->menuBar();
+                  mb->clear();
+                  while (e.readNextStartElement()) {
+                        if (e.hasAttribute("name")) { // is a menu
+                              QString menu_id = e.attribute("name");
+                              QMenu* menu = findMenuFromString(menu_id);
+                              if (menu) {
+                                    menu->clear();
+                                    mb->addMenu(menu);
+                                    readMenu(e, menu);
+                                    }
+                              else {
+                                    menu = new QMenu(menu_id);
+                                    mb->addMenu(menu);
+                                    readMenu(e, menu);
+                                    }
+                              }
+                        else { // is an action
+                              QString action_id = e.readXml();
+                              if (action_id.isEmpty())
+                                    mb->addSeparator();
+                              else {
+                                    QAction* action = findActionFromString(action_id);
+                                    mb->addAction(action);
+                                    }
+                              }
+                        }
+                  }
             else
                   e.unknown();
             }
       if (!niToolbar) {
             mscore->setNoteInputMenuEntries(mscore->allNoteInputMenuEntries());
             mscore->populateNoteInputMenu();
+            }
+      }
+
+//---------------------------------------------------------
+//   readMenu
+//---------------------------------------------------------
+
+void Workspace::readMenu(XmlReader& e, QMenu* menu)
+      {
+      while (e.readNextStartElement()) {
+            if (e.hasAttribute("name")) { // is a menu
+                  QString menu_id = e.attribute("name");
+                  QMenu* new_menu = findMenuFromString(menu_id);
+                  if (new_menu) {
+                        new_menu->clear();
+                        menu->addMenu(new_menu);
+                        readMenu(e, new_menu);
+                        }
+                  else {
+                        new_menu = new QMenu(menu_id);
+                        menu->addMenu(new_menu);
+                        readMenu(e, new_menu);
+                        }
+                  }
+            else { // is an action
+                  QString action_id = e.readXml();
+                  if (action_id.isEmpty())
+                        menu->addSeparator();
+                  else {
+                        QAction* action = findActionFromString(action_id);
+                        if (action_id == "preference-dialog" ||
+                            action_id == "online-handbook" ||
+                            action_id == "about" ||
+                            action_id == "about-qt" ||
+                            action_id == "about-musicxml" ||
+                            action_id == "ask-help" ||
+                            action_id == "report-bug" ||
+                            action_id == "revert-factory")
+                              continue;
+                        menu->addAction(action);
+                        }
+                  }
             }
       }
 
@@ -680,6 +753,44 @@ QString Workspace::findStringFromAction(QAction* action)
       {
       for (auto pair : actionToStringList) {
             if (pair.first == action)
+                  return pair.second;
+            }
+      return 0;
+      }
+
+//---------------------------------------------------------
+//   addMenuAndString
+//---------------------------------------------------------
+
+void Workspace::addMenuAndString(QMenu* menu, QString string)
+      {
+      QPair<QMenu*, QString> pair;
+      pair.first = menu;
+      pair.second = string;
+      menuToStringList.append(pair);
+      }
+
+//---------------------------------------------------------
+//   findMenuFromString
+//---------------------------------------------------------
+
+QMenu* Workspace::findMenuFromString(QString string)
+      {
+      for (auto pair : menuToStringList) {
+            if (pair.second == string)
+                  return pair.first;
+            }
+      return 0;
+      }
+
+//---------------------------------------------------------
+//   findStringFromMenu
+//---------------------------------------------------------
+
+QString Workspace::findStringFromMenu(QMenu* menu)
+      {
+      for (auto pair : menuToStringList) {
+            if (pair.first == menu)
                   return pair.second;
             }
       return 0;
