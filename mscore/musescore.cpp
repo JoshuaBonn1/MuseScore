@@ -588,298 +588,13 @@ void MuseScore::populateNoteInputMenu()
       }
 
 //---------------------------------------------------------
-//   MuseScore
+//   populateMenuBar
 //---------------------------------------------------------
 
-MuseScore::MuseScore()
-   : QMainWindow()
+void MuseScore::populateDefaultMenuBar()
       {
-      QScreen* screen = QGuiApplication::primaryScreen();
-      if (userDPI == 0.0) {
-#if defined(Q_OS_WIN)
-      if (QSysInfo::WindowsVersion <= QSysInfo::WV_WINDOWS7)
-            _physicalDotsPerInch = screen->logicalDotsPerInch() * screen->devicePixelRatio();
-      else
-            _physicalDotsPerInch = screen->physicalDotsPerInch();  // physical resolution
-#else
-      _physicalDotsPerInch = screen->physicalDotsPerInch();        // physical resolution
-#endif
-            }
-      else {
-            _physicalDotsPerInch = userDPI;
-            }
-      if (guiScaling == 0.0) {
-            // set scale for icons, palette elements, window sizes, etc
-            // the default values are hard coded in pixel sizes and assume ~96 DPI
-            if (qAbs(_physicalDotsPerInch - DPI_DISPLAY) > 6.0)
-                  guiScaling = _physicalDotsPerInch / DPI_DISPLAY;
-            else
-                  guiScaling = 1.0;
-            }
-
-      MScore::pixelRatio = DPI / screen->logicalDotsPerInch();
-
-      setObjectName("MuseScore");
-      _sstate = STATE_INIT;
-      setWindowTitle(QString(MUSESCORE_NAME_VERSION));
-      setIconSize(QSize(preferences.getInt(PREF_UI_THEME_ICONWIDTH) * guiScaling, preferences.getInt(PREF_UI_THEME_ICONHEIGHT) * guiScaling));
-
-      ucheck = new UpdateChecker();
-
-      setAcceptDrops(true);
-      setFocusPolicy(Qt::NoFocus);
-
-#ifdef SCRIPT_INTERFACE
-      pluginManager = new PluginManager(0);
-#endif
-
-      if (!converterMode && !pluginMode) {
-            _loginManager = new LoginManager(this);
-#if 0
-            // initialize help engine
-            QString lang = mscore->getLocaleISOCode();
-            if (lang == "en_US")    // HACK
-                  lang = "en";
-
-            QString s = getSharePath() + "manual/doc_" + lang + ".qhc";
-            _helpEngine = new QHelpEngine(s, this);
-            if (!_helpEngine->setupData()) {
-                  qDebug("cannot setup data for help engine: %s", qPrintable(_helpEngine->error()));
-                  delete _helpEngine;
-                  _helpEngine = 0;
-                  }
-#endif
-            }
-
-      _positionLabel = new QLabel;
-      _positionLabel->setObjectName("decoration widget");  // this prevents animations
-
-      _modeText = new QLabel;
-      _modeText->setAutoFillBackground(false);
-      _modeText->setObjectName("modeLabel");
-
-      hRasterAction   = getAction("hraster");
-      vRasterAction   = getAction("vraster");
-      loopAction      = getAction("loop");
-      loopInAction    = getAction("loop-in");
-      loopOutAction   = getAction("loop-out");
-      metronomeAction = getAction("metronome");
-      countInAction   = getAction("countin");
-      panAction       = getAction("pan");
-
-      _statusBar = new QStatusBar;
-      _statusBar->addPermanentWidget(new QWidget(this), 2);
-      _statusBar->addPermanentWidget(new QWidget(this), 100);
-      _statusBar->addPermanentWidget(_modeText, 0);
-
-      if (enableExperimental) {
-            layerSwitch = new QComboBox(this);
-            layerSwitch->setToolTip(tr("Switch layer"));
-            connect(layerSwitch, SIGNAL(activated(const QString&)), SLOT(switchLayer(const QString&)));
-            playMode = new QComboBox(this);
-            playMode->addItem(tr("Synthesizer"));
-            playMode->addItem(tr("Audio track"));
-            playMode->setToolTip(tr("Switch play mode"));
-            connect(playMode, SIGNAL(activated(int)), SLOT(switchPlayMode(int)));
-
-            _statusBar->addPermanentWidget(playMode);
-            _statusBar->addPermanentWidget(layerSwitch);
-            }
-
-      _statusBar->addPermanentWidget(_positionLabel, 0);
-
-      setStatusBar(_statusBar);
-      ScoreAccessibility::createInstance(this);
-
-      // otherwise unused actions:
-      //   must be added somewere to work
-      QActionGroup* ag = Shortcut::getActionGroupForWidget(MsWidget::MAIN_WINDOW);
-      ag->setParent(this);
-      addActions(ag->actions());
-      connect(ag, SIGNAL(triggered(QAction*)), SLOT(cmd(QAction*)));
-
-      mainWindow = new QSplitter;
-      mainWindow->setChildrenCollapsible(false);
-
-      QWidget* mainScore = new QWidget;
-      mainScore->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-      mainWindow->addWidget(mainScore);
-
-      layout = new QVBoxLayout;
-      layout->setMargin(0);
-      layout->setSpacing(0);
-      mainScore->setLayout(layout);
-
-      _navigator = new NScrollArea;
-      _navigator->setFocusPolicy(Qt::NoFocus);
-      mainWindow->addWidget(_navigator);
-      scorePageLayoutChanged();
-      showNavigator(preferences.getBool(PREF_UI_APP_STARTUP_SHOWNAVIGATOR));
-
-      _timeline = new TDockWidget;
-      _timeline->setFocusPolicy(Qt::NoFocus);
-      addDockWidget(Qt::BottomDockWidgetArea, _timeline);
-      scorePageLayoutChanged();
-      showTimeline(false);
-
-      mainWindow->setStretchFactor(0, 1);
-      mainWindow->setStretchFactor(1, 0);
-      mainWindow->setSizes(QList<int>({500, 50}));
-
-      QSplitter* envelope = new QSplitter;
-      envelope->setChildrenCollapsible(false);
-      envelope->setOrientation(Qt::Vertical);
-      envelope->addWidget(mainWindow);
-
-      importmidiPanel = new ImportMidiPanel(this);
-      importmidiPanel->setVisible(false);
-      envelope->addWidget(importmidiPanel);
-
-      {
-      importmidiShowPanel = new QFrame;
-      QHBoxLayout *hl = new QHBoxLayout;
-      hl->setMargin(0);
-      hl->setSpacing(0);
-      importmidiShowPanel->setLayout(hl);
-      showMidiImportButton = new QPushButton();
-      showMidiImportButton->setFocusPolicy(Qt::ClickFocus);
-      importmidiShowPanel->setVisible(false);
-      connect(showMidiImportButton, SIGNAL(clicked()), SLOT(showMidiImportPanel()));
-      connect(importmidiPanel, SIGNAL(closeClicked()), importmidiShowPanel, SLOT(show()));
-      hl->addWidget(showMidiImportButton);
-      QSpacerItem *item = new QSpacerItem(1, 1, QSizePolicy::Expanding, QSizePolicy::Fixed);
-      hl->addSpacerItem(item);
-      envelope->addWidget(importmidiShowPanel);
-      }
-
-      envelope->setSizes(QList<int>({550, 180}));
-
-      splitter = new QSplitter;
-      tab1 = new ScoreTab(&scoreList, this);
-      tab1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-      connect(tab1, SIGNAL(currentScoreViewChanged(ScoreView*)), SLOT(setCurrentScoreView(ScoreView*)));
-      connect(tab1, SIGNAL(tabCloseRequested(int)), SLOT(removeTab(int)));
-      connect(tab1, SIGNAL(actionTriggered(QAction*)), SLOT(cmd(QAction*)));
-      splitter->addWidget(tab1);
-
-      if (splitScreen()) {
-            tab2 = new ScoreTab(&scoreList, this);
-            tab2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            connect(tab2, SIGNAL(currentScoreViewChanged(ScoreView*)), SLOT(setCurrentScoreView(ScoreView*)));
-            connect(tab2, SIGNAL(tabCloseRequested(int)), SLOT(removeTab(int)));
-            connect(tab2, SIGNAL(actionTriggered(QAction*)), SLOT(cmd(QAction*)));
-            splitter->addWidget(tab2);
-            tab2->setVisible(false);
-            }
-      else
-            tab2 = 0;
-      layout->addWidget(splitter);
-
-
-      //---------------------------------------------------
-      //    Transport Action
-      //---------------------------------------------------
-
-      QAction* a;
-#ifdef HAS_MIDI
-      a  = getAction("midi-on");
-      a->setEnabled(preferences.getBool(PREF_IO_MIDI_ENABLEINPUT));
-      a->setChecked(_midiinEnabled);
-#endif
-
-      getAction("undo")->setEnabled(false);
-      getAction("redo")->setEnabled(false);
-      getAction("paste")->setEnabled(false);
-      getAction("swap")->setEnabled(false);
-      selectionChanged(SelState::NONE);
-
-      //---------------------------------------------------
-      //    File Tool Bar
-      //---------------------------------------------------
-
-      fileTools = addToolBar("");
-      fileTools->setObjectName("file-operations");
-      if (qApp->layoutDirection() == Qt::LayoutDirection::LeftToRight) {
-            for (auto i : { "file-new", "file-open", "file-save", "print", "undo", "redo"})
-                  fileTools->addWidget(new AccessibleToolButton(fileTools, getAction(i)));
-            }
-      else {
-            for (auto i : { "undo", "redo", "print", "file-save", "file-open", "file-new"})
-                  fileTools->addWidget(new AccessibleToolButton(fileTools, getAction(i)));
-            }
-
-      fileTools->addSeparator();
-      mag = new MagBox;
-      connect(mag, SIGNAL(magChanged(MagIdx)), SLOT(magChanged(MagIdx)));
-      fileTools->addWidget(mag);
-      viewModeCombo = new QComboBox(this);
-#if defined(Q_OS_MAC)
-      viewModeCombo->setFocusPolicy(Qt::StrongFocus);
-#else
-      viewModeCombo->setFocusPolicy(Qt::TabFocus);
-#endif
-      viewModeCombo->setFixedHeight(preferences.getInt(PREF_UI_THEME_ICONHEIGHT) + 8);  // hack
-      viewModeCombo->addItem("",       int(LayoutMode::PAGE));
-      viewModeCombo->addItem("", int(LayoutMode::LINE));
-      viewModeCombo->addItem("", int(LayoutMode::SYSTEM));
-      connect(viewModeCombo, SIGNAL(activated(int)), SLOT(switchLayoutMode(int)));
-      fileTools->addWidget(viewModeCombo);
-
-      //---------------------
-      //    Transport Tool Bar
-      //---------------------
-
-      transportTools = addToolBar("");
-      transportTools->setObjectName("transport-tools");
-#ifdef HAS_MIDI
-      transportTools->addWidget(new AccessibleToolButton(transportTools, getAction("midi-on")));
-      transportTools->addSeparator();
-#endif
-      transportTools->addWidget(new AccessibleToolButton(transportTools, getAction("rewind")));
-      _playButton = new AccessibleToolButton(transportTools, getAction("play"));
-      transportTools->addWidget(_playButton);
-      transportTools->addWidget(new AccessibleToolButton(transportTools, getAction("loop")));
-      transportTools->addSeparator();
-      QAction* repeatAction = getAction("repeat");
-      repeatAction->setChecked(preferences.getBool(PREF_APP_PLAYBACK_PLAYREPEATS));
-      transportTools->addWidget(new AccessibleToolButton(transportTools, repeatAction));
-      transportTools->addWidget(new AccessibleToolButton(transportTools, getAction("pan")));
-      transportTools->addWidget(new AccessibleToolButton(transportTools, metronomeAction));
-
-      //-------------------------------
-      //    Concert Pitch Tool Bar
-      //-------------------------------
-
-      cpitchTools = addToolBar("");
-      cpitchTools->setObjectName("pitch-tools");
-      a = getAction("concert-pitch");
-      a->setCheckable(true);
-      cpitchTools->addWidget(new AccessibleToolButton(cpitchTools, a));
-
-      //-------------------------------
-      //    Image Capture Tool Bar
-      //-------------------------------
-
-      fotoTools = addToolBar("");
-      fotoTools->setObjectName("foto-tools");
-      fotoTools->addWidget(new AccessibleToolButton(fotoTools, getAction("fotomode")));
-
-      addToolBarBreak();
-
-      //-------------------------------
-      //    Note Input Tool Bar
-      //-------------------------------
-
-      entryTools = addToolBar("");
-      entryTools->setObjectName("entry-tools");
-
-      populateNoteInputMenu();
-
-      //---------------------
-      //    Menus
-      //---------------------
-
       QMenuBar* mb = menuBar();
+      mb->clear();
 
       //---------------------
       //    Menu File
@@ -888,10 +603,11 @@ MuseScore::MuseScore()
       menuFile = mb->addMenu("");
       menuFile->setObjectName("File");
 
-      a = getAction("startcenter");
+      QAction* a = getAction("startcenter");
       a->setCheckable(true);
       menuFile->addAction(a);
-      menuFile->addAction(getAction("file-new"));
+      a = getAction("file-new");
+      menuFile->addAction(a);
       menuFile->addAction(getAction("file-open"));
 
       openRecent = menuFile->addMenu("");
@@ -969,6 +685,7 @@ MuseScore::MuseScore()
       menuEdit->addSeparator();
       pref = menuEdit->addAction("", this, SLOT(startPreferenceDialog()));
       pref->setMenuRole(QAction::PreferencesRole);
+      Workspace::addActionAndString(pref, "preference-dialog");
 
       //---------------------
       //    Menu View
@@ -1329,6 +1046,7 @@ MuseScore::MuseScore()
 #endif
       //menuHelp->addAction(getAction("help"));
       onlineHandbookAction = menuHelp->addAction("", this, SLOT(helpBrowser1()));
+      Workspace::addActionAndString(onlineHandbookAction, "online-handbook");
 
       menuHelp->addSeparator();
 
@@ -1337,30 +1055,815 @@ MuseScore::MuseScore()
       aboutAction->setMenuRole(QAction::AboutRole);
       connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
       menuHelp->addAction(aboutAction);
+      Workspace::addActionAndString(aboutAction, "about");
 
       aboutQtAction = new QAction("", 0);
       aboutQtAction->setMenuRole(QAction::AboutQtRole);
       connect(aboutQtAction, SIGNAL(triggered()), this, SLOT(aboutQt()));
       menuHelp->addAction(aboutQtAction);
+      Workspace::addActionAndString(aboutQtAction, "about-qt");
 
       aboutMusicXMLAction = new QAction("", 0);
       aboutMusicXMLAction->setMenuRole(QAction::ApplicationSpecificRole);
       connect(aboutMusicXMLAction, SIGNAL(triggered()), this, SLOT(aboutMusicXML()));
       menuHelp->addAction(aboutMusicXMLAction);
+      Workspace::addActionAndString(aboutMusicXMLAction, "about-musicxml");
 
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN)
 #if not defined(FOR_WINSTORE)
       checkForUpdateAction = menuHelp->addAction("", this, SLOT(checkForUpdate()));
+      Workspace::addActionAndString(checkForUpdateAction, "check-update");
 #endif
 #endif
       menuHelp->addSeparator();
       askForHelpAction = menuHelp->addAction("", this, SLOT(askForHelp()));
+      Workspace::addActionAndString(askForHelpAction, "ask-help");
       reportBugAction = menuHelp->addAction("", this, SLOT(reportBug()));
+      Workspace::addActionAndString(reportBugAction, "report-bug");
 
       menuHelp->addSeparator();
       menuHelp->addAction(getAction("resource-manager"));
       menuHelp->addSeparator();
       revertToFactoryAction = menuHelp->addAction("", this, SLOT(resetAndRestart()));
+      Workspace::addActionAndString(revertToFactoryAction, "revert-factory");
+      Workspace::addRemainingFromMenuBar(mb);
+      }
+
+//---------------------------------------------------------
+//   MuseScore
+//---------------------------------------------------------
+
+MuseScore::MuseScore()
+   : QMainWindow()
+      {
+      QScreen* screen = QGuiApplication::primaryScreen();
+      if (userDPI == 0.0) {
+#if defined(Q_OS_WIN)
+      if (QSysInfo::WindowsVersion <= QSysInfo::WV_WINDOWS7)
+            _physicalDotsPerInch = screen->logicalDotsPerInch() * screen->devicePixelRatio();
+      else
+            _physicalDotsPerInch = screen->physicalDotsPerInch();  // physical resolution
+#else
+      _physicalDotsPerInch = screen->physicalDotsPerInch();        // physical resolution
+#endif
+            }
+      else {
+            _physicalDotsPerInch = userDPI;
+            }
+      if (guiScaling == 0.0) {
+            // set scale for icons, palette elements, window sizes, etc
+            // the default values are hard coded in pixel sizes and assume ~96 DPI
+            if (qAbs(_physicalDotsPerInch - DPI_DISPLAY) > 6.0)
+                  guiScaling = _physicalDotsPerInch / DPI_DISPLAY;
+            else
+                  guiScaling = 1.0;
+            }
+
+      MScore::pixelRatio = DPI / screen->logicalDotsPerInch();
+
+      setObjectName("MuseScore");
+      _sstate = STATE_INIT;
+      setWindowTitle(QString(MUSESCORE_NAME_VERSION));
+      setIconSize(QSize(preferences.getInt(PREF_UI_THEME_ICONWIDTH) * guiScaling, preferences.getInt(PREF_UI_THEME_ICONHEIGHT) * guiScaling));
+
+      ucheck = new UpdateChecker();
+
+      setAcceptDrops(true);
+      setFocusPolicy(Qt::NoFocus);
+
+#ifdef SCRIPT_INTERFACE
+      pluginManager = new PluginManager(0);
+#endif
+
+      if (!converterMode && !pluginMode) {
+            _loginManager = new LoginManager(this);
+#if 0
+            // initialize help engine
+            QString lang = mscore->getLocaleISOCode();
+            if (lang == "en_US")    // HACK
+                  lang = "en";
+
+            QString s = getSharePath() + "manual/doc_" + lang + ".qhc";
+            _helpEngine = new QHelpEngine(s, this);
+            if (!_helpEngine->setupData()) {
+                  qDebug("cannot setup data for help engine: %s", qPrintable(_helpEngine->error()));
+                  delete _helpEngine;
+                  _helpEngine = 0;
+                  }
+#endif
+            }
+
+      _positionLabel = new QLabel;
+      _positionLabel->setObjectName("decoration widget");  // this prevents animations
+
+      _modeText = new QLabel;
+      _modeText->setAutoFillBackground(false);
+      _modeText->setObjectName("modeLabel");
+
+      hRasterAction   = getAction("hraster");
+      vRasterAction   = getAction("vraster");
+      loopAction      = getAction("loop");
+      loopInAction    = getAction("loop-in");
+      loopOutAction   = getAction("loop-out");
+      metronomeAction = getAction("metronome");
+      countInAction   = getAction("countin");
+      panAction       = getAction("pan");
+
+      _statusBar = new QStatusBar;
+      _statusBar->addPermanentWidget(new QWidget(this), 2);
+      _statusBar->addPermanentWidget(new QWidget(this), 100);
+      _statusBar->addPermanentWidget(_modeText, 0);
+
+      if (enableExperimental) {
+            layerSwitch = new QComboBox(this);
+            layerSwitch->setToolTip(tr("Switch layer"));
+            connect(layerSwitch, SIGNAL(activated(const QString&)), SLOT(switchLayer(const QString&)));
+            playMode = new QComboBox(this);
+            playMode->addItem(tr("Synthesizer"));
+            playMode->addItem(tr("Audio track"));
+            playMode->setToolTip(tr("Switch play mode"));
+            connect(playMode, SIGNAL(activated(int)), SLOT(switchPlayMode(int)));
+
+            _statusBar->addPermanentWidget(playMode);
+            _statusBar->addPermanentWidget(layerSwitch);
+            }
+
+      _statusBar->addPermanentWidget(_positionLabel, 0);
+
+      setStatusBar(_statusBar);
+      ScoreAccessibility::createInstance(this);
+
+      // otherwise unused actions:
+      //   must be added somewere to work
+      QActionGroup* ag = Shortcut::getActionGroupForWidget(MsWidget::MAIN_WINDOW);
+      ag->setParent(this);
+      addActions(ag->actions());
+      connect(ag, SIGNAL(triggered(QAction*)), SLOT(cmd(QAction*)));
+
+      mainWindow = new QSplitter;
+      mainWindow->setChildrenCollapsible(false);
+
+      QWidget* mainScore = new QWidget;
+      mainScore->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+      mainWindow->addWidget(mainScore);
+
+      layout = new QVBoxLayout;
+      layout->setMargin(0);
+      layout->setSpacing(0);
+      mainScore->setLayout(layout);
+
+      _navigator = new NScrollArea;
+      _navigator->setFocusPolicy(Qt::NoFocus);
+      mainWindow->addWidget(_navigator);
+      scorePageLayoutChanged();
+      showNavigator(preferences.getBool(PREF_UI_APP_STARTUP_SHOWNAVIGATOR));
+
+      _timeline = new TDockWidget;
+      _timeline->setFocusPolicy(Qt::NoFocus);
+      addDockWidget(Qt::BottomDockWidgetArea, _timeline);
+      scorePageLayoutChanged();
+      showTimeline(false);
+
+      mainWindow->setStretchFactor(0, 1);
+      mainWindow->setStretchFactor(1, 0);
+      mainWindow->setSizes(QList<int>({500, 50}));
+
+      QSplitter* envelope = new QSplitter;
+      envelope->setChildrenCollapsible(false);
+      envelope->setOrientation(Qt::Vertical);
+      envelope->addWidget(mainWindow);
+
+      importmidiPanel = new ImportMidiPanel(this);
+      importmidiPanel->setVisible(false);
+      envelope->addWidget(importmidiPanel);
+
+      {
+      importmidiShowPanel = new QFrame;
+      QHBoxLayout *hl = new QHBoxLayout;
+      hl->setMargin(0);
+      hl->setSpacing(0);
+      importmidiShowPanel->setLayout(hl);
+      showMidiImportButton = new QPushButton();
+      showMidiImportButton->setFocusPolicy(Qt::ClickFocus);
+      importmidiShowPanel->setVisible(false);
+      connect(showMidiImportButton, SIGNAL(clicked()), SLOT(showMidiImportPanel()));
+      connect(importmidiPanel, SIGNAL(closeClicked()), importmidiShowPanel, SLOT(show()));
+      hl->addWidget(showMidiImportButton);
+      QSpacerItem *item = new QSpacerItem(1, 1, QSizePolicy::Expanding, QSizePolicy::Fixed);
+      hl->addSpacerItem(item);
+      envelope->addWidget(importmidiShowPanel);
+      }
+
+      envelope->setSizes(QList<int>({550, 180}));
+
+      splitter = new QSplitter;
+      tab1 = new ScoreTab(&scoreList, this);
+      tab1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+      connect(tab1, SIGNAL(currentScoreViewChanged(ScoreView*)), SLOT(setCurrentScoreView(ScoreView*)));
+      connect(tab1, SIGNAL(tabCloseRequested(int)), SLOT(removeTab(int)));
+      connect(tab1, SIGNAL(actionTriggered(QAction*)), SLOT(cmd(QAction*)));
+      splitter->addWidget(tab1);
+
+      if (splitScreen()) {
+            tab2 = new ScoreTab(&scoreList, this);
+            tab2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            connect(tab2, SIGNAL(currentScoreViewChanged(ScoreView*)), SLOT(setCurrentScoreView(ScoreView*)));
+            connect(tab2, SIGNAL(tabCloseRequested(int)), SLOT(removeTab(int)));
+            connect(tab2, SIGNAL(actionTriggered(QAction*)), SLOT(cmd(QAction*)));
+            splitter->addWidget(tab2);
+            tab2->setVisible(false);
+            }
+      else
+            tab2 = 0;
+      layout->addWidget(splitter);
+
+
+      //---------------------------------------------------
+      //    Transport Action
+      //---------------------------------------------------
+
+      QAction* a;
+#ifdef HAS_MIDI
+      a  = getAction("midi-on");
+      a->setEnabled(preferences.getBool(PREF_IO_MIDI_ENABLEINPUT));
+      a->setChecked(_midiinEnabled);
+#endif
+
+      getAction("undo")->setEnabled(false);
+      getAction("redo")->setEnabled(false);
+      getAction("paste")->setEnabled(false);
+      getAction("swap")->setEnabled(false);
+      selectionChanged(SelState::NONE);
+
+      //---------------------------------------------------
+      //    File Tool Bar
+      //---------------------------------------------------
+
+      fileTools = addToolBar("");
+      fileTools->setObjectName("file-operations");
+      if (qApp->layoutDirection() == Qt::LayoutDirection::LeftToRight) {
+            for (auto i : { "file-new", "file-open", "file-save", "print", "undo", "redo"})
+                  fileTools->addWidget(new AccessibleToolButton(fileTools, getAction(i)));
+            }
+      else {
+            for (auto i : { "undo", "redo", "print", "file-save", "file-open", "file-new"})
+                  fileTools->addWidget(new AccessibleToolButton(fileTools, getAction(i)));
+            }
+
+      fileTools->addSeparator();
+      mag = new MagBox;
+      connect(mag, SIGNAL(magChanged(MagIdx)), SLOT(magChanged(MagIdx)));
+      fileTools->addWidget(mag);
+      viewModeCombo = new QComboBox(this);
+#if defined(Q_OS_MAC)
+      viewModeCombo->setFocusPolicy(Qt::StrongFocus);
+#else
+      viewModeCombo->setFocusPolicy(Qt::TabFocus);
+#endif
+      viewModeCombo->setFixedHeight(preferences.getInt(PREF_UI_THEME_ICONHEIGHT) + 8);  // hack
+      viewModeCombo->addItem("",       int(LayoutMode::PAGE));
+      viewModeCombo->addItem("", int(LayoutMode::LINE));
+      viewModeCombo->addItem("", int(LayoutMode::SYSTEM));
+      connect(viewModeCombo, SIGNAL(activated(int)), SLOT(switchLayoutMode(int)));
+      fileTools->addWidget(viewModeCombo);
+
+      //---------------------
+      //    Transport Tool Bar
+      //---------------------
+
+      transportTools = addToolBar("");
+      transportTools->setObjectName("transport-tools");
+#ifdef HAS_MIDI
+      transportTools->addWidget(new AccessibleToolButton(transportTools, getAction("midi-on")));
+      transportTools->addSeparator();
+#endif
+      transportTools->addWidget(new AccessibleToolButton(transportTools, getAction("rewind")));
+      _playButton = new AccessibleToolButton(transportTools, getAction("play"));
+      transportTools->addWidget(_playButton);
+      transportTools->addWidget(new AccessibleToolButton(transportTools, getAction("loop")));
+      transportTools->addSeparator();
+      QAction* repeatAction = getAction("repeat");
+      repeatAction->setChecked(preferences.getBool(PREF_APP_PLAYBACK_PLAYREPEATS));
+      transportTools->addWidget(new AccessibleToolButton(transportTools, repeatAction));
+      transportTools->addWidget(new AccessibleToolButton(transportTools, getAction("pan")));
+      transportTools->addWidget(new AccessibleToolButton(transportTools, metronomeAction));
+
+      //-------------------------------
+      //    Concert Pitch Tool Bar
+      //-------------------------------
+
+      cpitchTools = addToolBar("");
+      cpitchTools->setObjectName("pitch-tools");
+      a = getAction("concert-pitch");
+      a->setCheckable(true);
+      cpitchTools->addWidget(new AccessibleToolButton(cpitchTools, a));
+
+      //-------------------------------
+      //    Image Capture Tool Bar
+      //-------------------------------
+
+      fotoTools = addToolBar("");
+      fotoTools->setObjectName("foto-tools");
+      fotoTools->addWidget(new AccessibleToolButton(fotoTools, getAction("fotomode")));
+
+      addToolBarBreak();
+
+      //-------------------------------
+      //    Note Input Tool Bar
+      //-------------------------------
+
+      entryTools = addToolBar("");
+      entryTools->setObjectName("entry-tools");
+
+      populateNoteInputMenu();
+
+      //---------------------
+      //    Menus
+      //---------------------
+
+      QMenuBar* mb = menuBar();
+      populateDefaultMenuBar();
+
+      //---------------------
+      //    Menu File
+      //---------------------
+
+//      menuFile = mb->addMenu("");
+//      menuFile->setObjectName("File");
+
+//      a = getAction("startcenter");
+//      a->setCheckable(true);
+//      menuFile->addAction(a);
+//      menuFile->addAction(getAction("file-new"));
+//      menuFile->addAction(getAction("file-open"));
+
+//      openRecent = menuFile->addMenu("");
+
+//      connect(openRecent, SIGNAL(aboutToShow()), SLOT(openRecentMenu()));
+//      connect(openRecent, SIGNAL(triggered(QAction*)), SLOT(selectScore(QAction*)));
+
+//      for (auto i : {
+//            "",
+//            "file-save",
+//            "file-save-as",
+//            "file-save-a-copy",
+//            "file-save-selection",
+//            "file-save-online",
+//            "file-export",
+//            "file-part-export",
+//            "file-import-pdf",
+//            "",
+//            "file-close",
+//            "",
+//            "parts",
+//            "album" }) {
+//            if (!*i)
+//                  menuFile->addSeparator();
+//            else if (enableExperimental || strcmp(i,"file-save-online") != 0)
+//                  menuFile->addAction(getAction(i));
+//            }
+//      if (enableExperimental)
+//            menuFile->addAction(getAction("layer"));
+//      menuFile->addSeparator();
+//      menuFile->addAction(getAction("edit-info"));
+//      if (enableExperimental)
+//            menuFile->addAction(getAction("media"));
+//      menuFile->addSeparator();
+//      menuFile->addAction(getAction("print"));
+//#ifndef Q_OS_MAC
+//      menuFile->addSeparator();
+//      menuFile->addAction(getAction("quit"));
+//#endif
+
+//      //---------------------
+//      //    Menu Edit
+//      //---------------------
+
+//      menuEdit = mb->addMenu("");
+//      menuEdit->setObjectName("Edit");
+//      menuEdit->addAction(getAction("undo"));
+//      menuEdit->addAction(getAction("redo"));
+
+//      menuEdit->addSeparator();
+//      menuEdit->addAction(getAction("cut"));
+//      menuEdit->addAction(getAction("copy"));
+//      menuEdit->addAction(getAction("paste"));
+//      menuEdit->addAction(getAction("swap"));
+//      menuEdit->addAction(getAction("delete"));
+
+//      menuEdit->addSeparator();
+//      menuEdit->addAction(getAction("select-all"));
+//      menuEdit->addAction(getAction("select-section"));
+//      menuEdit->addAction(getAction("find"));
+
+//      menuEdit->addSeparator();
+
+//      menuEdit->addAction(getAction("instruments"));
+
+//#ifdef NDEBUG
+//      if (enableExperimental) {
+//#endif
+//            menuEdit->addSeparator();
+//            menuEdit->addAction(getAction("debugger"));
+//#ifdef NDEBUG
+//            }
+//#endif
+
+//      menuEdit->addSeparator();
+//      pref = menuEdit->addAction("", this, SLOT(startPreferenceDialog()));
+//      pref->setMenuRole(QAction::PreferencesRole);
+
+//      //---------------------
+//      //    Menu View
+//      //---------------------
+
+//      menuView = mb->addMenu("");
+//      menuView->setObjectName("View");
+
+//      a = getAction("toggle-palette");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+
+//      a = getAction("masterpalette");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+
+//      a = getAction("inspector");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+//#ifdef OMR
+//      a = getAction("omr");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+//#endif
+//      playId = getAction("toggle-playpanel");
+//      playId->setCheckable(true);
+//      menuView->addAction(playId);
+
+//      a = getAction("toggle-navigator");
+//      a->setCheckable(true);
+//      a->setChecked(preferences.getBool(PREF_UI_APP_STARTUP_SHOWNAVIGATOR));
+//      menuView->addAction(a);
+
+//      a = getAction("toggle-timeline");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+
+//      a = getAction("toggle-mixer");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+
+//      a = getAction("synth-control");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+
+//      a = getAction("toggle-selection-window");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+
+//      a = getAction("toggle-piano");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+
+//      menuView->addSeparator();
+//      menuView->addAction(getAction("zoomin"));
+//      menuView->addAction(getAction("zoomout"));
+//      menuView->addSeparator();
+
+//      menuToolbars = new QMenu();
+
+//      a = getAction("toggle-fileoperations");
+//      a->setCheckable(true);
+//      a->setChecked(fileTools->isVisible());
+//      connect(fileTools, SIGNAL(visibilityChanged(bool)), a, SLOT(setChecked(bool)));
+//      menuToolbars->addAction(a);
+
+//      a = getAction("toggle-transport");
+//      a->setCheckable(true);
+//      a->setChecked(transportTools->isVisible());
+//      connect(transportTools, SIGNAL(visibilityChanged(bool)), a, SLOT(setChecked(bool)));
+//      menuToolbars->addAction(a);
+
+//      a = getAction("toggle-concertpitch");
+//      a->setCheckable(true);
+//      a->setChecked(cpitchTools->isVisible());
+//      connect(cpitchTools, SIGNAL(visibilityChanged(bool)), a, SLOT(setChecked(bool)));
+//      menuToolbars->addAction(a);
+
+//      a = getAction("toggle-imagecapture");
+//      a->setCheckable(true);
+//      a->setChecked(fotoTools->isVisible());
+//      connect(fotoTools, SIGNAL(visibilityChanged(bool)), a, SLOT(setChecked(bool)));
+//      menuToolbars->addAction(a);
+
+//      a = getAction("toggle-noteinput");
+//      a->setCheckable(true);
+//      a->setChecked(entryTools->isVisible());
+//      connect(entryTools, SIGNAL(visibilityChanged(bool)), a, SLOT(setChecked(bool)));
+//      menuToolbars->addAction(a);
+
+//      menuToolbars->addSeparator();
+
+//      menuToolbars->addAction(getAction("edit-toolbars"));
+
+//      menuView->addMenu(menuToolbars);
+
+//      menuWorkspaces = new QMenu();
+//      connect(menuWorkspaces, SIGNAL(aboutToShow()), SLOT(showWorkspaceMenu()));
+//      menuView->addMenu(menuWorkspaces);
+
+//      a = getAction("toggle-statusbar");
+//      a->setCheckable(true);
+//      a->setChecked(preferences.getBool(PREF_UI_APP_SHOWSTATUSBAR));
+//      menuView->addAction(a);
+
+//      menuView->addSeparator();
+//      a = getAction("split-h");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+//      a = getAction("split-v");
+//      a->setCheckable(true);
+//      menuView->addAction(a);
+
+//      menuView->addSeparator();
+//      menuView->addAction(getAction("show-invisible"));
+//      menuView->addAction(getAction("show-unprintable"));
+//      menuView->addAction(getAction("show-frames"));
+//      menuView->addAction(getAction("show-pageborders"));
+//      menuView->addAction(getAction("mark-irregular"));
+//      menuView->addSeparator();
+
+//      a = getAction("fullscreen");
+//      a->setCheckable(true);
+//      a->setChecked(false);
+//#ifndef Q_OS_MAC
+//      menuView->addAction(a);
+//#endif
+
+//      //---------------------
+//      //    Menu Add
+//      //---------------------
+
+//      menuAdd = mb->addMenu("");
+//      menuAdd->setObjectName("Add");
+
+//      menuAddPitch = new QMenu();
+//      menuAddPitch->addAction(getAction("note-input"));
+//      menuAddPitch->addSeparator();
+
+//      for (int i = 0; i < 7; ++i) {
+//            char buffer[8];
+//            sprintf(buffer, "note-%c", "cdefgab"[i]);
+//            a = getAction(buffer);
+//            menuAddPitch->addAction(a);
+//            }
+//      menuAddPitch->addSeparator();
+//      for (int i = 0; i < 7; ++i) {
+//            char buffer[8];
+//            sprintf(buffer, "chord-%c", "cdefgab"[i]);
+//            a = getAction(buffer);
+//            menuAddPitch->addAction(a);
+//            }
+//      menuAdd->addMenu(menuAddPitch);
+
+//      menuAddInterval = new QMenu();
+//      for (int i = 1; i < 10; ++i) {
+//            char buffer[16];
+//            sprintf(buffer, "interval%d", i);
+//            a = getAction(buffer);
+//            menuAddInterval->addAction(a);
+//            }
+//      menuAddInterval->addSeparator();
+//      for (int i = 2; i < 10; ++i) {
+//            char buffer[16];
+//            sprintf(buffer, "interval-%d", i);
+//            a = getAction(buffer);
+//            menuAddInterval->addAction(a);
+//            }
+//      menuAdd->addMenu(menuAddInterval);
+
+//      menuTuplet = new QMenu();
+//      for (auto i : { "duplet", "triplet", "quadruplet", "quintuplet", "sextuplet",
+//            "septuplet", "octuplet", "nonuplet", "tuplet-dialog" })
+//            menuTuplet->addAction(getAction(i));
+//      menuAdd->addMenu(menuTuplet);
+
+//      menuAdd->addSeparator();
+
+//      menuAddMeasures = new QMenu("");
+//      menuAddMeasures->addAction(getAction("insert-measure"));
+//      menuAddMeasures->addAction(getAction("insert-measures"));
+//      menuAddMeasures->addSeparator();
+//      menuAddMeasures->addAction(getAction("append-measure"));
+//      menuAddMeasures->addAction(getAction("append-measures"));
+//      menuAdd->addMenu(menuAddMeasures);
+
+//      menuAddFrames = new QMenu();
+//      menuAddFrames->addAction(getAction("insert-hbox"));
+//      menuAddFrames->addAction(getAction("insert-vbox"));
+//      menuAddFrames->addAction(getAction("insert-textframe"));
+//      if (enableExperimental)
+//            menuAddFrames->addAction(getAction("insert-fretframe"));
+//      menuAddFrames->addSeparator();
+//      menuAddFrames->addAction(getAction("append-hbox"));
+//      menuAddFrames->addAction(getAction("append-vbox"));
+//      menuAddFrames->addAction(getAction("append-textframe"));
+//      menuAdd->addMenu(menuAddFrames);
+
+//      menuAddText = new QMenu();
+//      menuAddText->addAction(getAction("title-text"));
+//      menuAddText->addAction(getAction("subtitle-text"));
+//      menuAddText->addAction(getAction("composer-text"));
+//      menuAddText->addAction(getAction("poet-text"));
+//      menuAddText->addAction(getAction("part-text"));
+//      menuAddText->addSeparator();
+//      menuAddText->addAction(getAction("system-text"));
+//      menuAddText->addAction(getAction("staff-text"));
+//      menuAddText->addAction(getAction("expression-text"));
+//      menuAddText->addAction(getAction("chord-text"));
+//      menuAddText->addAction(getAction("rehearsalmark-text"));
+//      menuAddText->addAction(getAction("instrument-change-text"));
+//      menuAddText->addAction(getAction("fingering-text"));
+//      menuAddText->addSeparator();
+//      menuAddText->addAction(getAction("lyrics"));
+//      menuAddText->addAction(getAction("figured-bass"));
+//      menuAddText->addAction(getAction("tempo"));
+//      menuAdd->addMenu(menuAddText);
+
+//      menuAddLines = new QMenu();
+//      menuAddLines->addAction(getAction("add-slur"));
+//      menuAddLines->addAction(getAction("add-hairpin"));
+//      menuAddLines->addAction(getAction("add-hairpin-reverse"));
+//      menuAddLines->addAction(getAction("add-8va"));
+//      menuAddLines->addAction(getAction("add-8vb"));
+//      menuAddLines->addAction(getAction("add-noteline"));
+//      menuAdd->addMenu(menuAddLines);
+
+//      //---------------------
+//      //    Menu Format
+//      //---------------------
+
+//      menuFormat = mb->addMenu("");
+//      menuFormat->setObjectName("Format");
+
+//      menuFormat->addAction(getAction("edit-style"));
+//      QAction* pageSettingsAction = getAction("page-settings");
+//      // in some locale (fr), page settings ends up in Application menu on mac
+//      // this line prevents it.
+//      pageSettingsAction->setMenuRole(QAction::NoRole);
+//      menuFormat->addAction(pageSettingsAction);
+//      menuFormat->addSeparator();
+
+//      menuFormat->addAction(getAction("add-remove-breaks"));
+
+//      QMenu* menuStretch = new QMenu(tr("&Stretch"));
+//      for (auto i : { "stretch+", "stretch-", "reset-stretch" })
+//            menuStretch->addAction(getAction(i));
+//      menuFormat->addMenu(menuStretch);
+//      menuFormat->addSeparator();
+
+//      menuFormat->addAction(getAction("reset-beammode"));
+//      menuFormat->addAction(getAction("reset"));
+//      menuFormat->addSeparator();
+
+//      if (enableExperimental)
+//            menuFormat->addAction(getAction("edit-harmony"));
+
+//      menuFormat->addSeparator();
+//      menuFormat->addAction(getAction("load-style"));
+//      menuFormat->addAction(getAction("save-style"));
+
+//      //---------------------
+//      //    Menu Tools
+//      //---------------------
+
+//      menuTools = mb->addMenu("");
+//      menuTools->setObjectName("Tools");
+
+//      menuTools->addAction(getAction("transpose"));
+//      menuTools->addSeparator();
+//      menuTools->addAction(getAction("explode"));
+//      menuTools->addAction(getAction("implode"));
+
+//      menuVoices = new QMenu("");
+//      for (auto i : { "voice-x12", "voice-x13", "voice-x14", "voice-x23", "voice-x24", "voice-x34" })
+//            menuVoices->addAction(getAction(i));
+//      menuTools->addMenu(menuVoices);
+//      menuTools->addSeparator();
+
+//      menuTools->addAction(getAction("slash-fill"));
+//      menuTools->addAction(getAction("slash-rhythm"));
+//      menuTools->addSeparator();
+
+//      menuTools->addAction(getAction("pitch-spell"));
+//      menuTools->addAction(getAction("reset-groupings"));
+//      menuTools->addAction(getAction("resequence-rehearsal-marks"));
+//      menuTools->addSeparator();
+
+//      menuTools->addAction(getAction("copy-lyrics-to-clipboard"));
+//      menuTools->addAction(getAction("fotomode"));
+
+//      menuTools->addAction(getAction("del-empty-measures"));
+
+//      //---------------------
+//      //    Menu Plugins
+//      //---------------------
+
+//      menuPlugins = mb->addMenu("");
+//      menuPlugins->setObjectName("Plugins");
+
+//      menuPlugins->addAction(getAction("plugin-manager"));
+
+//      a = getAction("plugin-creator");
+//      a->setCheckable(true);
+//      menuPlugins->addAction(a);
+
+//      menuPlugins->addSeparator();
+
+//      //---------------------
+//      //    Menu Debug
+//      //---------------------
+
+//#ifndef NDEBUG
+//      QMenu* menuDebug = mb->addMenu("Debug");
+//      menuDebug->setObjectName("Debug");
+//      a = getAction("no-horizontal-stretch");
+//      a->setCheckable(true);
+//      menuDebug->addAction(a);
+//      a = getAction("no-vertical-stretch");
+//      a->setCheckable(true);
+//      menuDebug->addAction(a);
+//      menuDebug->addSeparator();
+//      a = getAction("show-segment-shapes");
+//      a->setCheckable(true);
+//      menuDebug->addAction(a);
+//      a = getAction("show-measure-shapes");
+//      a->setCheckable(true);
+//      menuDebug->addAction(a);
+//      a = getAction("show-bounding-rect");
+//      a->setCheckable(true);
+//      menuDebug->addAction(a);
+//      a = getAction("show-corrupted-measures");
+//      a->setCheckable(true);
+//      a->setChecked(true);
+//      menuDebug->addAction(a);
+//      a = getAction("relayout");
+//      menuDebug->addAction(a);
+//      a = getAction("autoplace-slurs");
+//      a->setCheckable(true);
+//      a->setChecked(MScore::autoplaceSlurs);
+//      menuDebug->addAction(a);
+//#endif
+
+//      //---------------------
+//      //    Menu Help
+//      //---------------------
+
+//      mb->addSeparator();
+//      menuHelp = mb->addMenu("");
+//      menuHelp->setObjectName("Help");
+
+//#if 0
+//      if (_helpEngine) {
+//            HelpQuery* hw = new HelpQuery(menuHelp);
+//            menuHelp->addAction(hw);
+//            connect(menuHelp, SIGNAL(aboutToShow()), hw, SLOT(setFocus()));
+//            }
+//#endif
+//      //menuHelp->addAction(getAction("help"));
+//      onlineHandbookAction = menuHelp->addAction("", this, SLOT(helpBrowser1()));
+
+//      menuHelp->addSeparator();
+
+//      aboutAction = new QAction("", 0);
+
+//      aboutAction->setMenuRole(QAction::AboutRole);
+//      connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
+//      menuHelp->addAction(aboutAction);
+
+//      aboutQtAction = new QAction("", 0);
+//      aboutQtAction->setMenuRole(QAction::AboutQtRole);
+//      connect(aboutQtAction, SIGNAL(triggered()), this, SLOT(aboutQt()));
+//      menuHelp->addAction(aboutQtAction);
+
+//      aboutMusicXMLAction = new QAction("", 0);
+//      aboutMusicXMLAction->setMenuRole(QAction::ApplicationSpecificRole);
+//      connect(aboutMusicXMLAction, SIGNAL(triggered()), this, SLOT(aboutMusicXML()));
+//      menuHelp->addAction(aboutMusicXMLAction);
+
+//#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
+//#if not defined(FOR_WINSTORE)
+//      checkForUpdateAction = menuHelp->addAction("", this, SLOT(checkForUpdate()));
+//#endif
+//#endif
+//      menuHelp->addSeparator();
+//      askForHelpAction = menuHelp->addAction("", this, SLOT(askForHelp()));
+//      reportBugAction = menuHelp->addAction("", this, SLOT(reportBug()));
+
+//      menuHelp->addSeparator();
+//      menuHelp->addAction(getAction("resource-manager"));
+//      menuHelp->addSeparator();
+//      revertToFactoryAction = menuHelp->addAction("", this, SLOT(resetAndRestart()));
 
       if (!MScore::noGui) {
             retranslate(true);

@@ -46,6 +46,8 @@ QList<Workspace*> Workspace::_workspaces {
       &_advancedWorkspace
       };
 
+QList<QPair<QAction*, QString>> Workspace::actionToStringList {};
+
 //---------------------------------------------------------
 //   undoWorkspace
 //---------------------------------------------------------
@@ -328,6 +330,8 @@ void Workspace::write()
             }
       xml.etag();
 
+      writeMenuBar(&cbuf);
+
       xml.etag();
       xml.etag();
       f.addFile("workspace.xml", cbuf.data());
@@ -336,6 +340,44 @@ void Workspace::write()
 
       if (f.status() != MQZipWriter::NoError)
             writeFailed(_path);
+      }
+
+void Workspace::writeMenuBar(QBuffer* cbuf) {
+      // Loop through each menu in menubar. For each menu, call writeMenu.
+      XmlWriter xml(gscore, cbuf);
+      xml.stag("MenuBar");
+      QMenuBar* mb = mscore->menuBar();
+      for (QAction* action : mb->actions()) {
+            if (action->isSeparator())
+                  xml.tag("action", "");
+            else if (action->menu()) {
+//                  QString str = Shortcut::findShortcutFromText(action->text());
+                  xml.stag("Menu name=\"" + action->text().remove('&') + "\"");
+                  writeMenu(cbuf, action->menu());
+                  xml.etag();
+                  }
+            else
+                  xml.tag("action", findStringFromAction(action));
+            }
+      xml.etag();
+      }
+
+void Workspace::writeMenu(QBuffer* cbuf, QMenu* menu) {
+      XmlWriter xml(gscore, cbuf);
+      // Recursively save QMenu
+      for (QAction* action : menu->actions()) {
+            if (action->isSeparator())
+                  xml.tag("action", "");
+            else if (action->menu()) {
+//                  QString str = Shortcut::findShortcutFromText(action->text());
+                  xml.stag("Menu name=\"" + action->text().remove('&') + "\"");
+                  writeMenu(cbuf, action->menu());
+                  xml.etag();
+                  }
+            else {
+                  xml.tag("action", findStringFromAction(action));
+                  }
+            }
       }
 
 extern QString readRootFile(MQZipReader*, QList<QString>&);
@@ -570,5 +612,77 @@ Workspace* Workspace::createNewWorkspace(const QString& name)
       return p;
       }
 
+//---------------------------------------------------------
+//   addActionAndString
+//---------------------------------------------------------
+
+void Workspace::addActionAndString(QAction* action, QString string)
+      {
+      QPair<QAction*, QString> pair;
+      pair.first = action;
+      pair.second = string;
+      actionToStringList.append(pair);
+      }
+
+//---------------------------------------------------------
+//   addRemainingFromMenuBar
+//---------------------------------------------------------
+
+void Workspace::addRemainingFromMenuBar(QMenuBar* mb)
+      {
+      // Loop through each menu in menubar. For each menu, call writeMenu.
+      for (QAction* action : mb->actions()) {
+            if (action->isSeparator())
+                  continue;
+            else if (action->menu())
+                  addRemainingFromMenu(action->menu());
+            else if (!action->data().toString().isEmpty())
+                  addActionAndString(action, action->data().toString());
+            }
+      qDebug() << "Done";
+      }
+
+//---------------------------------------------------------
+//   addRemainingFromMenu
+//---------------------------------------------------------
+
+void Workspace::addRemainingFromMenu(QMenu* menu)
+      {
+      // Recursively save QMenu
+      for (QAction* action : menu->actions()) {
+            if (action->isSeparator())
+                  continue;
+            else if (action->menu())
+                  addRemainingFromMenu(action->menu());
+            else if (!action->data().toString().isEmpty())
+                  addActionAndString(action, action->data().toString());
+            }
+      }
+
+//---------------------------------------------------------
+//   findActionFromString
+//---------------------------------------------------------
+
+QAction* Workspace::findActionFromString(QString string)
+      {
+      for (auto pair : actionToStringList) {
+            if (pair.second == string)
+                  return pair.first;
+            }
+      return 0;
+      }
+
+//---------------------------------------------------------
+//   findStringFromAction
+//---------------------------------------------------------
+
+QString Workspace::findStringFromAction(QAction* action)
+      {
+      for (auto pair : actionToStringList) {
+            if (pair.first == action)
+                  return pair.second;
+            }
+      return 0;
+      }
 }
 

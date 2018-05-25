@@ -35,6 +35,14 @@ class Workspace : public QObject {
       static QList<Workspace*> _workspaces;
       static Workspace _advancedWorkspace;
       static Workspace _basicWorkspace;
+      static QList<QPair<QAction*, QString>> actionToStringList;
+
+      void writeMenuBar(QBuffer* cbuf);
+      void writeMenu(QBuffer* cbuf, QMenu* menu);
+      static void addRemainingFromMenu(QMenu* menu);
+
+      QString findStringFromAction(QAction* action);
+      QAction* findActionFromString(QString string);
 
       QString _name;
       QString _path;
@@ -68,6 +76,8 @@ class Workspace : public QObject {
       static Workspace* createNewWorkspace(const QString& name);
       static bool workspacesRead;
       static void writeBuiltinWorkspace();
+      static void addActionAndString(QAction* action, QString string);
+      static void addRemainingFromMenuBar(QMenuBar* mb);
       };
 }
 #endif
