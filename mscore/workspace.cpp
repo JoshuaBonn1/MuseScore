@@ -353,7 +353,6 @@ void Workspace::writeMenuBar(QBuffer* cbuf) {
             if (action->isSeparator())
                   xml.tag("action", "");
             else if (action->menu()) {
-//                  QString str = Shortcut::findShortcutFromText(action->text());
                   xml.stag("Menu name=\"" + findStringFromMenu(action->menu()) + "\"");
                   writeMenu(cbuf, action->menu());
                   xml.etag();
@@ -491,7 +490,6 @@ void Workspace::read(XmlReader& e)
                               case QVariant::Int:
                                     {
                                     int new_int = e.readInt();
-                                    qDebug() << preference_name << " = " << new_int;
                                     preferences.setPreference(preference_name, new_int);
                                     }
                                     break;
@@ -506,15 +504,12 @@ void Workspace::read(XmlReader& e)
                               case QVariant::String:
                                     {
                                     QString new_string = e.readXml();
-                                    qDebug() << preference_name << " = " << new_string;
-
                                     preferences.setPreference(preference_name, new_string);
                                     }
                                     break;
                               case QVariant::Bool:
                                     {
                                     bool new_bool = e.readBool();
-                                    qDebug() << preference_name << " = " << new_bool;
 
                                     preferences.setPreference(preference_name, new_bool);
                                     }
@@ -590,15 +585,6 @@ void Workspace::readMenu(XmlReader& e, QMenu* menu)
                         menu->addSeparator();
                   else {
                         QAction* action = findActionFromString(action_id);
-                        if (action_id == "preference-dialog" ||
-                            action_id == "online-handbook" ||
-                            action_id == "about" ||
-                            action_id == "about-qt" ||
-                            action_id == "about-musicxml" ||
-                            action_id == "ask-help" ||
-                            action_id == "report-bug" ||
-                            action_id == "revert-factory")
-                              continue;
                         menu->addAction(action);
                         }
                   }

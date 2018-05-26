@@ -683,7 +683,10 @@ void MuseScore::populateDefaultMenuBar()
 #endif
 
       menuEdit->addSeparator();
-      pref = menuEdit->addAction("", this, SLOT(startPreferenceDialog()));
+      pref = new QAction("", 0);
+      connect(pref, SIGNAL(triggered()), this, SLOT(startPreferenceDialog()));
+      //pref = menuEdit->addAction("", this, SLOT(startPreferenceDialog()));
+      menuEdit->addAction(pref);
       pref->setMenuRole(QAction::PreferencesRole);
       Workspace::addActionAndString(pref, "preference-dialog");
 
@@ -1047,7 +1050,10 @@ void MuseScore::populateDefaultMenuBar()
             }
 #endif
       //menuHelp->addAction(getAction("help"));
-      onlineHandbookAction = menuHelp->addAction("", this, SLOT(helpBrowser1()));
+      onlineHandbookAction = new QAction("", 0);
+      connect(onlineHandbookAction, SIGNAL(triggered()), this, SLOT(helpBrowser1()));
+      //onlineHandbookAction = menuHelp->addAction("", this, SLOT(helpBrowser1()));
+      menuHelp->addAction(onlineHandbookAction);
       Workspace::addActionAndString(onlineHandbookAction, "online-handbook");
 
       menuHelp->addSeparator();
@@ -1078,16 +1084,28 @@ void MuseScore::populateDefaultMenuBar()
 #endif
 #endif
       menuHelp->addSeparator();
-      askForHelpAction = menuHelp->addAction("", this, SLOT(askForHelp()));
+      askForHelpAction = new QAction("", 0);
+      connect(askForHelpAction, SIGNAL(triggered()), this, SLOT(askForHelp()));
+//      askForHelpAction = menuHelp->addAction("", this, SLOT(askForHelp()));
+      menuHelp->addAction(askForHelpAction);
       Workspace::addActionAndString(askForHelpAction, "ask-help");
-      reportBugAction = menuHelp->addAction("", this, SLOT(reportBug()));
+
+      reportBugAction = new QAction("", 0);
+      connect(reportBugAction, SIGNAL(triggered()), this, SLOT(reportBug()));
+//      reportBugAction = menuHelp->addAction("", this, SLOT(reportBug()));
+      menuHelp->addAction(reportBugAction);
       Workspace::addActionAndString(reportBugAction, "report-bug");
 
       menuHelp->addSeparator();
       menuHelp->addAction(getAction("resource-manager"));
       menuHelp->addSeparator();
-      revertToFactoryAction = menuHelp->addAction("", this, SLOT(resetAndRestart()));
+
+      revertToFactoryAction = new QAction("", 0);
+      connect(revertToFactoryAction, SIGNAL(triggered()), this, SLOT(resetAndRestart()));
+//      revertToFactoryAction = menuHelp->addAction("", this, SLOT(resetAndRestart()));
+      menuHelp->addAction(revertToFactoryAction);
       Workspace::addActionAndString(revertToFactoryAction, "revert-factory");
+
       Workspace::addRemainingFromMenuBar(mb);
 
       // Add all menus to workspace for loading
