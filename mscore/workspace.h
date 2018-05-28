@@ -49,6 +49,8 @@ class Workspace : public QObject {
       QMenu* findMenuFromString(QString string);
       QString findStringFromMenu(QMenu* menu);
 
+      void loadDefaultMenuBar();
+
       QString _name;
       QString _path;
       bool _dirty;

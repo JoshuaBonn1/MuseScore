@@ -395,6 +395,7 @@ void Workspace::read()
                   p->setSystemPalette(true);
             mscore->setNoteInputMenuEntries(MuseScore::advancedNoteInputMenuEntries());
             mscore->populateNoteInputMenu();
+            loadDefaultMenuBar();
             return;
             }
       if (_path == "Basic") {
@@ -403,11 +404,13 @@ void Workspace::read()
                   p->setSystemPalette(true);
             mscore->setNoteInputMenuEntries(MuseScore::basicNoteInputMenuEntries());
             mscore->populateNoteInputMenu();
+            loadDefaultMenuBar();
             return;
             }
       if (_path.isEmpty() || !QFile(_path).exists()) {
             qDebug("cannot read workspace <%s>", qPrintable(_path));
             mscore->setAdvancedPalette();       // set default palette
+            loadDefaultMenuBar();
             return;
             }
       QFileInfo fi(_path);
@@ -781,5 +784,386 @@ QString Workspace::findStringFromMenu(QMenu* menu)
             }
       return 0;
       }
+
+//---------------------------------------------------------
+//   loadDefaultMenuBar
+//---------------------------------------------------------
+
+void Workspace::loadDefaultMenuBar() {
+      QMenuBar* mb = mscore->menuBar();
+      mb->clear();
+
+      //---------------------
+      //    Menu File
+      //---------------------
+
+      QMenu* menu = findMenuFromString("menu-file");
+      menu->clear();
+      mb->addMenu(menu);
+
+      menu->addAction(findActionFromString("startcenter"));
+      menu->addAction(findActionFromString("file-new"));
+      menu->addAction(findActionFromString("file-open"));
+
+      menu->addMenu(findMenuFromString("menu-open-recent"));
+
+      menu->addSeparator();
+      menu->addAction(findActionFromString("file-save"));
+      menu->addAction(findActionFromString("file-save-as"));
+      menu->addAction(findActionFromString("file-save-a-copy"));
+      menu->addAction(findActionFromString("file-save-selection"));
+      if (enableExperimental)
+            menu->addAction(findActionFromString("file-save-online"));
+      menu->addAction(findActionFromString("file-export"));
+      menu->addAction(findActionFromString("file-part-export"));
+      menu->addAction(findActionFromString("file-import-pdf"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("file-close"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("parts"));
+      menu->addAction(findActionFromString("album"));
+      if (enableExperimental)
+            menu->addAction(findActionFromString("layer"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("edit-info"));
+      if (enableExperimental)
+            menu->addAction(findActionFromString("media"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("print"));
+#ifndef Q_OS_MAC
+      menu->addSeparator();
+      menu->addAction(findActionFromString("quit"));
+#endif
+
+      //---------------------
+      //    Menu Edit
+      //---------------------
+
+      menu = findMenuFromString("menu-edit");
+      menu->clear();
+      mb->addMenu(menu);
+
+      menu->addAction(findActionFromString("undo"));
+      menu->addAction(findActionFromString("redo"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("cut"));
+      menu->addAction(findActionFromString("copy"));
+      menu->addAction(findActionFromString("paste"));
+      menu->addAction(findActionFromString("swap"));
+      menu->addAction(findActionFromString("delete"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("select-all"));
+      menu->addAction(findActionFromString("select-section"));
+      menu->addAction(findActionFromString("find"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("instruments"));
+
+#ifdef NDEBUG
+      if (enableExperimental) {
+#endif
+            menu->addSeparator();
+            menu->addAction(findActionFromString("debugger"));
+#ifdef NDEBUG
+            }
+#endif
+
+      menu->addSeparator();
+      menu->addAction(findActionFromString("preference-dialog"));
+
+      //---------------------
+      //    Menu View
+      //---------------------
+
+      menu = findMenuFromString("menu-view");
+      menu->clear();
+      mb->addMenu(menu);
+
+      menu->addAction(findActionFromString("toggle-palette"));
+      menu->addAction(findActionFromString("masterpalette"));
+      menu->addAction(findActionFromString("inspector"));
+
+#ifdef OMR
+      menu->addAction(findActionFromString("omr"));
+#endif
+
+      menu->addAction(findActionFromString("toggle-playpanel"));
+      menu->addAction(findActionFromString("toggle-navigator"));
+      menu->addAction(findActionFromString("toggle-timeline"));
+      menu->addAction(findActionFromString("toggle-mixer"));
+      menu->addAction(findActionFromString("synth-control"));
+      menu->addAction(findActionFromString("toggle-selection-window"));
+      menu->addAction(findActionFromString("toggle-piano"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("zoomin"));
+      menu->addAction(findActionFromString("zoomout"));
+      menu->addSeparator();
+
+      menu = findMenuFromString("menu-toolbars");
+
+      menu->addAction(findActionFromString("toggle-fileoperations"));
+      menu->addAction(findActionFromString("toggle-transport"));
+      menu->addAction(findActionFromString("toggle-concertpitch"));
+      menu->addAction(findActionFromString("toggle-imagecapture"));
+      menu->addAction(findActionFromString("toggle-noteinput"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("edit-toolbars"));
+
+      menu = findMenuFromString("menu-view");
+      menu->addMenu(findMenuFromString("menu-toolbars"));
+      menu->addMenu(findMenuFromString("menu-workspaces"));
+
+      menu->addAction(findActionFromString("toggle-statusbar"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("split-h"));
+      menu->addAction(findActionFromString("split-v"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("show-invisible"));
+      menu->addAction(findActionFromString("show-unprintable"));
+      menu->addAction(findActionFromString("show-frames"));
+      menu->addAction(findActionFromString("show-pageborders"));
+      menu->addAction(findActionFromString("mark-irregular"));
+      menu->addSeparator();
+
+#ifndef Q_OS_MAC
+      menu->addAction(findActionFromString("fullscreen"));
+#endif
+
+      //---------------------
+      //    Menu Add
+      //---------------------
+
+      menu = findMenuFromString("menu-add");
+      menu->clear();
+      mb->addMenu(menu);
+
+      menu->addMenu(findMenuFromString("menu-add-pitch"));
+      menu->addMenu(findMenuFromString("menu-add-interval"));
+      menu->addMenu(findMenuFromString("menu-tuplet"));
+      menu->addSeparator();
+      menu->addMenu(findMenuFromString("menu-add-measures"));
+      menu->addMenu(findMenuFromString("menu-add-frames"));
+      menu->addMenu(findMenuFromString("menu-add-text"));
+      menu->addMenu(findMenuFromString("menu-add-lines"));
+
+      menu = findMenuFromString("menu-add-pitch");
+      menu->clear();
+      menu->addAction(findActionFromString("note-input"));
+      menu->addSeparator();
+      for (int i = 0; i < 7; ++i) {
+            char buffer[8];
+            sprintf(buffer, "note-%c", "cdefgab"[i]);
+            menu->addAction(findActionFromString(buffer));
+            }
+      menu->addSeparator();
+      for (int i = 0; i < 7; ++i) {
+            char buffer[8];
+            sprintf(buffer, "chord-%c", "cdefgab"[i]);
+            menu->addAction(findActionFromString(buffer));
+            }
+
+      menu = findMenuFromString("menu-add-interval");
+      menu->clear();
+      for (int i = 1; i < 10; ++i) {
+            char buffer[16];
+            sprintf(buffer, "interval%d", i);
+            menu->addAction(findActionFromString(buffer));
+            }
+      menu->addSeparator();
+      for (int i = 2; i < 10; ++i) {
+            char buffer[16];
+            sprintf(buffer, "interval-%d", i);
+            menu->addAction(findActionFromString(buffer));
+            }
+
+      menu = findMenuFromString("menu-tuplet");
+      menu->clear();
+      for (auto i : { "duplet", "triplet", "quadruplet", "quintuplet", "sextuplet",
+            "septuplet", "octuplet", "nonuplet", "tuplet-dialog" })
+            menu->addAction(findActionFromString(i));
+
+      menu = findMenuFromString("menu-add-measures");
+      menu->clear();
+      menu->addAction(findActionFromString("insert-measure"));
+      menu->addAction(findActionFromString("insert-measures"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("append-measure"));
+      menu->addAction(findActionFromString("append-measures"));
+
+      menu = findMenuFromString("menu-add-frames");
+      menu->clear();
+      menu->addAction(findActionFromString("insert-hbox"));
+      menu->addAction(findActionFromString("insert-vbox"));
+      menu->addAction(findActionFromString("insert-textframe"));
+      if (enableExperimental)
+            menu->addAction(findActionFromString("insert-fretframe"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("append-hbox"));
+      menu->addAction(findActionFromString("append-vbox"));
+      menu->addAction(findActionFromString("append-textframe"));
+
+      menu = findMenuFromString("menu-add-text");
+      menu->clear();
+      menu->addAction(findActionFromString("title-text"));
+      menu->addAction(findActionFromString("subtitle-text"));
+      menu->addAction(findActionFromString("composer-text"));
+      menu->addAction(findActionFromString("poet-text"));
+      menu->addAction(findActionFromString("part-text"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("system-text"));
+      menu->addAction(findActionFromString("staff-text"));
+      menu->addAction(findActionFromString("expression-text"));
+      menu->addAction(findActionFromString("chord-text"));
+      menu->addAction(findActionFromString("rehearsalmark-text"));
+      menu->addAction(findActionFromString("instrument-change-text"));
+      menu->addAction(findActionFromString("fingering-text"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("lyrics"));
+      menu->addAction(findActionFromString("figured-bass"));
+      menu->addAction(findActionFromString("tempo"));
+
+      menu = findMenuFromString("menu-add-lines");
+      menu->clear();
+      menu->addAction(findActionFromString("add-slur"));
+      menu->addAction(findActionFromString("add-hairpin"));
+      menu->addAction(findActionFromString("add-hairpin-reverse"));
+      menu->addAction(findActionFromString("add-8va"));
+      menu->addAction(findActionFromString("add-8vb"));
+      menu->addAction(findActionFromString("add-noteline"));
+
+      //---------------------
+      //    Menu Format
+      //---------------------
+
+      menu = findMenuFromString("menu-format");
+      menu->clear();
+      mb->addMenu(menu);
+
+      menu->addAction(findActionFromString("edit-style"));
+      menu->addAction(findActionFromString("page-settings"));
+      menu->addSeparator();
+
+      menu->addAction(findActionFromString("add-remove-breaks"));
+
+      QMenu* subMenu = findMenuFromString("menu-stretch");
+      subMenu->clear();
+      for (auto i : { "stretch+", "stretch-", "reset-stretch" })
+            subMenu->addAction(findActionFromString(i));
+      menu->addMenu(subMenu);
+      menu->addSeparator();
+
+      menu->addAction(findActionFromString("reset-beammode"));
+      menu->addAction(findActionFromString("reset"));
+      menu->addSeparator();
+
+      if (enableExperimental)
+            menu->addAction(findActionFromString("edit-harmony"));
+
+      menu->addSeparator();
+      menu->addAction(findActionFromString("load-style"));
+      menu->addAction(findActionFromString("save-style"));
+
+      //---------------------
+      //    Menu Tools
+      //---------------------
+
+      menu = findMenuFromString("menu-tools");
+      menu->clear();
+      mb->addMenu(menu);
+
+      menu->addAction(findActionFromString("transpose"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("explode"));
+      menu->addAction(findActionFromString("implode"));
+
+      subMenu = findMenuFromString("menu-voices");
+      subMenu->clear();
+      for (auto i : { "voice-x12", "voice-x13", "voice-x14", "voice-x23", "voice-x24", "voice-x34" })
+            subMenu->addAction(findActionFromString(i));
+      menu->addMenu(subMenu);
+      menu->addSeparator();
+
+      menu->addAction(findActionFromString("slash-fill"));
+      menu->addAction(findActionFromString("slash-rhythm"));
+      menu->addSeparator();
+
+      menu->addAction(findActionFromString("pitch-spell"));
+      menu->addAction(findActionFromString("reset-groupings"));
+      menu->addAction(findActionFromString("resequence-rehearsal-marks"));
+      menu->addSeparator();
+
+      menu->addAction(findActionFromString("copy-lyrics-to-clipboard"));
+      menu->addAction(findActionFromString("fotomode"));
+
+      menu->addAction(findActionFromString("del-empty-measures"));
+
+      //---------------------
+      //    Menu Plugins
+      //---------------------
+
+      menu = findMenuFromString("menu-plugins");
+      menu->clear();
+      mb->addMenu(menu);
+
+      menu->addAction(findActionFromString("plugin-manager"));
+      menu->addAction(findActionFromString("plugin-creator"));
+      menu->addSeparator();
+
+      //---------------------
+      //    Menu Debug
+      //---------------------
+
+#ifndef NDEBUG
+      menu = findMenuFromString("menu-debug");
+      menu->clear();
+      mb->addMenu(menu);
+
+      menu->addAction(findActionFromString("no-horizontal-stretch"));
+      menu->addAction(findActionFromString("no-vertical-stretch"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("show-segment-shapes"));
+      menu->addAction(findActionFromString("show-measure-shapes"));
+      menu->addAction(findActionFromString("show-bounding-rect"));
+      menu->addAction(findActionFromString("show-corrupted-measures"));
+      menu->addAction(findActionFromString("relayout"));
+      menu->addAction(findActionFromString("autoplace-slurs"));
+#endif
+
+      //---------------------
+      //    Menu Help
+      //---------------------
+
+      mb->addSeparator();
+      menu = findMenuFromString("menu-help");
+      menu->clear();
+      mb->addMenu(menu);
+
+#if 0
+      if (_helpEngine) {
+            HelpQuery* hw = new HelpQuery(menu);
+            menu->addAction(hw);
+            connect(menu, SIGNAL(aboutToShow()), hw, SLOT(setFocus()));
+            }
+#endif
+
+      menu->addAction(findActionFromString("online-handbook"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("about"));
+      menu->addAction(findActionFromString("about-qt"));
+      menu->addAction(findActionFromString("about-musicxml"));
+
+#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
+#if not defined(FOR_WINSTORE)
+      menu->addAction(findActionFromString("check-update"));
+#endif
+#endif
+      menu->addSeparator();
+      menu->addAction(findActionFromString("ask-help"));
+      menu->addAction(findActionFromString("report-bug"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("resource-manager"));
+      menu->addSeparator();
+      menu->addAction(findActionFromString("revert-factory"));
+      }
+
 }
 
