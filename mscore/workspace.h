@@ -76,6 +76,7 @@ class Workspace : public QObject {
       void read();
       bool readOnly() const          { return _readOnly; }
       void setReadOnly(bool val)     { _readOnly = val;  }
+      bool isBuiltInWorkspace();
 
       static void initWorkspace();
       static Workspace* currentWorkspace;
@@ -86,6 +87,8 @@ class Workspace : public QObject {
       static void addActionAndString(QAction* action, QString string);
       static void addRemainingFromMenuBar(QMenuBar* mb);
       static void addMenuAndString(QMenu* menu, QString string);
+
+      static std::unordered_map<std::string, QVariant> localPreferences;
       };
 }
 #endif

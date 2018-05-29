@@ -21,6 +21,7 @@
 #include "libmscore/style.h"
 #include "libmscore/mscore.h"
 #include "preferences.h"
+#include "workspace.h"
 
 namespace Ms {
 
@@ -171,6 +172,7 @@ void Preferences::init(bool storeInMemoryOnly)
             });
 
       _initialized = true;
+      Workspace::localPreferences = getWorkspaceRelevantPreferences();
       }
 
 void Preferences::save()
@@ -198,19 +200,31 @@ QSettings* Preferences::settings() const
 QVariant Preferences::get(const QString key) const
       {
       auto pref = _inMemorySettings.find(key.toStdString());
+      // Used to load custom presets if no currently loaded settings exist
+      auto local_pref = Workspace::localPreferences.find(key.toStdString());
 
       if (_storeInMemoryOnly)
             return (pref != _inMemorySettings.end()) ? pref->second : QVariant(); // invalid QVariant returned when not found
       else if (pref != _inMemorySettings.end()) // if there exists a temporary value stored "in memory" return this value
             return pref->second;
+      else if (Workspace::currentWorkspace &&
+               !Workspace::currentWorkspace->isBuiltInWorkspace() &&
+               local_pref != Workspace::localPreferences.end())
+            return local_pref->second;
       else
             return settings()->value(key);
       }
 
 void Preferences::set(const QString key, QVariant value, bool temporary)
       {
+      auto local_pref = Workspace::localPreferences.find(key.toStdString());
+
       if (_storeInMemoryOnly || temporary)
             _inMemorySettings[key.toStdString()] = value;
+      else if (Workspace::currentWorkspace &&
+               !Workspace::currentWorkspace->isBuiltInWorkspace() &&
+               local_pref != Workspace::localPreferences.end())
+            Workspace::localPreferences[key.toStdString()] = value;
       else
             settings()->setValue(key, value);
       }
@@ -378,8 +392,8 @@ void Preferences::clearMidiRemote(int recordId)
       remove(baseKey);
       }
 
-std::unordered_map<std::string, Preference> Preferences::getWorkspaceRelevantPreferences() {
-      std::unordered_map<std::string, Preference> ui_preferences;
+std::unordered_map<std::string, QVariant> Preferences::getWorkspaceRelevantPreferences() {
+      std::unordered_map<std::string, QVariant> ui_preferences;
       std::vector<std::string> ui_preferences_vector;
       ui_preferences_vector.push_back(PREF_UI_CANVAS_BG_USECOLOR);
       ui_preferences_vector.push_back(PREF_UI_CANVAS_FG_USECOLOR);
@@ -414,7 +428,7 @@ std::unordered_map<std::string, Preference> Preferences::getWorkspaceRelevantPre
       ui_preferences_vector.push_back(PREF_UI_THEME_ICONWIDTH);
       ui_preferences_vector.push_back(PREF_UI_THEME_ICONHEIGHT);
       for (auto pref : ui_preferences_vector)
-            ui_preferences.insert({{pref, get(QString::fromStdString(pref))}});
+            ui_preferences.insert({{pref, preference(QString::fromStdString(pref))}});
       return ui_preferences;
       }
 

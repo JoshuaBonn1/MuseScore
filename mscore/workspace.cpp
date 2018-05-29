@@ -47,8 +47,9 @@ QList<Workspace*> Workspace::_workspaces {
       };
 
 QList<QPair<QAction*, QString>> Workspace::actionToStringList {};
+QList<QPair<QMenu*  , QString>> Workspace::menuToStringList   {};
 
-QList<QPair<QMenu*, QString>> Workspace::menuToStringList {};
+std::unordered_map<std::string, QVariant> Workspace::localPreferences {};
 
 //---------------------------------------------------------
 //   undoWorkspace
@@ -324,10 +325,10 @@ void Workspace::write()
       xml.etag();
 
       xml.stag("Preferences");
-      for (auto pref : preferences.getWorkspaceRelevantPreferences()) {
-            if (pref.second.defaultValue().isValid()) {
+      for (auto pref : localPreferences) {
+            if (pref.second.isValid()) {
                   QString pref_first = QString::fromStdString(pref.first);
-                  xml.tag("Preference name=\"" + pref_first + "\"", pref.second.defaultValue());
+                  xml.tag("Preference name=\"" + pref_first + "\"", pref.second);
                   }
             }
       xml.etag();
@@ -396,6 +397,7 @@ void Workspace::read()
             mscore->setNoteInputMenuEntries(MuseScore::advancedNoteInputMenuEntries());
             mscore->populateNoteInputMenu();
             loadDefaultMenuBar();
+            localPreferences = preferences.getWorkspaceRelevantPreferences();
             return;
             }
       if (_path == "Basic") {
@@ -405,12 +407,14 @@ void Workspace::read()
             mscore->setNoteInputMenuEntries(MuseScore::basicNoteInputMenuEntries());
             mscore->populateNoteInputMenu();
             loadDefaultMenuBar();
+            localPreferences = preferences.getWorkspaceRelevantPreferences();
             return;
             }
       if (_path.isEmpty() || !QFile(_path).exists()) {
             qDebug("cannot read workspace <%s>", qPrintable(_path));
             mscore->setAdvancedPalette();       // set default palette
             loadDefaultMenuBar();
+            localPreferences = preferences.getWorkspaceRelevantPreferences();
             return;
             }
       QFileInfo fi(_path);
@@ -433,6 +437,8 @@ void Workspace::read()
       QByteArray ba = f.fileData(rootfile);
       XmlReader e(ba);
 
+      localPreferences = preferences.getWorkspaceRelevantPreferences();
+
       while (e.readNextStartElement()) {
             if (e.name() == "museScore") {
                   while (e.readNextStartElement()) {
@@ -443,7 +449,7 @@ void Workspace::read()
                         }
                   }
             }
-      preferences.save();
+//      preferences.save();
       }
 
 void Workspace::read(XmlReader& e)
@@ -493,28 +499,29 @@ void Workspace::read(XmlReader& e)
                               case QVariant::Int:
                                     {
                                     int new_int = e.readInt();
-                                    preferences.setPreference(preference_name, new_int);
+                                    localPreferences[preference_name.toStdString()] = QVariant(new_int);
+                                    //preferences.setPreference(preference_name, new_int);
                                     }
                                     break;
                               case QVariant::Color:
                                     {
                                     QColor new_color = e.readColor();
-                                    qDebug() << preference_name << " = " << new_color;
-
-                                    preferences.setPreference(preference_name, new_color);
+                                    localPreferences[preference_name.toStdString()] = QVariant(new_color);
+                                    //preferences.setPreference(preference_name, new_color);
                                     }
                                     break;
                               case QVariant::String:
                                     {
                                     QString new_string = e.readXml();
-                                    preferences.setPreference(preference_name, new_string);
+                                    localPreferences[preference_name.toStdString()] = QVariant(new_string);
+                                    //preferences.setPreference(preference_name, new_string);
                                     }
                                     break;
                               case QVariant::Bool:
                                     {
                                     bool new_bool = e.readBool();
-
-                                    preferences.setPreference(preference_name, new_bool);
+                                    localPreferences[preference_name.toStdString()] = QVariant(new_bool);
+                                    //preferences.setPreference(preference_name, new_bool);
                                     }
                                     break;
                               default:
@@ -592,6 +599,18 @@ void Workspace::readMenu(XmlReader& e, QMenu* menu)
                         }
                   }
             }
+      }
+
+//---------------------------------------------------------
+//   isBuiltInWorkspace
+//---------------------------------------------------------
+
+bool Workspace::isBuiltInWorkspace()
+      {
+      if (_path == "Basic" || _path == "Advanced")
+            return true;
+      else
+            return false;
       }
 
 //---------------------------------------------------------
