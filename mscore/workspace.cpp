@@ -324,16 +324,15 @@ void Workspace::write()
             xml.tag("action", i);
       xml.etag();
 
-      if (preferences.getBool(PREF_UI_APP_LOADCUSTOMPREFERENCES)) {
-            xml.stag("Preferences");
-            for (auto pref : localPreferences) {
-                  if (pref.second.isValid()) {
-                        QString pref_first = QString::fromStdString(pref.first);
-                        xml.tag("Preference name=\"" + pref_first + "\"", pref.second);
-                        }
+      QString use_custom = (preferences.getBool(PREF_UI_APP_USECUSTOMPREFERENCES))? QString("\"true\"") : QString("\"false\"");
+      xml.stag("Preferences useCustom=" + use_custom);
+      for (auto pref : localPreferences) {
+            if (pref.second.isValid()) {
+                  QString pref_first = QString::fromStdString(pref.first);
+                  xml.tag("Preference name=\"" + pref_first + "\"", pref.second);
                   }
-            xml.etag();
             }
+      xml.etag();
 
       writeMenuBar(&cbuf);
 
@@ -400,7 +399,7 @@ void Workspace::read()
             mscore->populateNoteInputMenu();
             loadDefaultMenuBar();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
-            preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, false);
+            preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, false);
             return;
             }
       if (_path == "Basic") {
@@ -411,7 +410,7 @@ void Workspace::read()
             mscore->populateNoteInputMenu();
             loadDefaultMenuBar();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
-            preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, false);
+            preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, false);
             return;
             }
       if (_path.isEmpty() || !QFile(_path).exists()) {
@@ -419,7 +418,7 @@ void Workspace::read()
             mscore->setAdvancedPalette();       // set default palette
             loadDefaultMenuBar();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
-            preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, false);
+            preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, false);
             return;
             }
       QFileInfo fi(_path);
@@ -498,6 +497,11 @@ void Workspace::read(XmlReader& e)
                         }
                   }
             else if (tag == "Preferences") {
+                  QString use_custom = e.attribute("useCustom");
+                  if (use_custom == "false")
+                        preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, false);
+                  else if (use_custom == "true")
+                        preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, true);
                   while (e.readNextStartElement()) {
                         QString preference_name = e.attribute("name");
                         switch (preferences.defaultValue(preference_name).type()) {
@@ -694,7 +698,7 @@ Workspace* Workspace::createNewWorkspace(const QString& name)
                   p->setCellReadOnly(i, false);
             }
 
-      preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, false);
+      preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, false);
       _workspaces.append(p);
       return p;
       }

@@ -335,7 +335,7 @@ void PreferenceDialog::updateValues(bool useDefaultValues)
       showSplashScreen->setChecked(preferences.getBool(PREF_UI_APP_STARTUP_SHOWSPLASHSCREEN));
       showStartcenter->setChecked(preferences.getBool(PREF_UI_APP_STARTUP_SHOWSTARTCENTER));
 
-      customPreferences->setChecked(preferences.getBool(PREF_UI_APP_LOADCUSTOMPREFERENCES));
+      customPreferences->setChecked(preferences.getBool(PREF_UI_APP_USECUSTOMPREFERENCES));
       if (Workspace::currentWorkspace->isBuiltInWorkspace())
             customPreferences->setEnabled(false);
       else
@@ -784,7 +784,7 @@ void PreferenceDialog::selectStartWith()
 
 void PreferenceDialog::loadCustomPreferences(bool clicked)
       {
-      preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, clicked);
+      preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, clicked);
       updateValues();
       }
 
@@ -855,7 +855,7 @@ void PreferenceDialog::buttonBoxClicked(QAbstractButton* button)
 
 void PreferenceDialog::apply()
       {
-      preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, customPreferences->isChecked());
+      preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, customPreferences->isChecked());
 
       if (lastSession->isChecked())
             preferences.setCustomPreference<SessionStart>(PREF_APP_STARTUP_SESSIONSTART, SessionStart::LAST);
