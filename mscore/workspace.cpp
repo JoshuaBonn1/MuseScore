@@ -324,14 +324,16 @@ void Workspace::write()
             xml.tag("action", i);
       xml.etag();
 
-      xml.stag("Preferences");
-      for (auto pref : localPreferences) {
-            if (pref.second.isValid()) {
-                  QString pref_first = QString::fromStdString(pref.first);
-                  xml.tag("Preference name=\"" + pref_first + "\"", pref.second);
+      if (preferences.getBool(PREF_UI_APP_LOADCUSTOMPREFERENCES)) {
+            xml.stag("Preferences");
+            for (auto pref : localPreferences) {
+                  if (pref.second.isValid()) {
+                        QString pref_first = QString::fromStdString(pref.first);
+                        xml.tag("Preference name=\"" + pref_first + "\"", pref.second);
+                        }
                   }
+            xml.etag();
             }
-      xml.etag();
 
       writeMenuBar(&cbuf);
 
@@ -398,6 +400,7 @@ void Workspace::read()
             mscore->populateNoteInputMenu();
             loadDefaultMenuBar();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
+            preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, false);
             return;
             }
       if (_path == "Basic") {
@@ -408,6 +411,7 @@ void Workspace::read()
             mscore->populateNoteInputMenu();
             loadDefaultMenuBar();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
+            preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, false);
             return;
             }
       if (_path.isEmpty() || !QFile(_path).exists()) {
@@ -415,6 +419,7 @@ void Workspace::read()
             mscore->setAdvancedPalette();       // set default palette
             loadDefaultMenuBar();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
+            preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, false);
             return;
             }
       QFileInfo fi(_path);
@@ -689,6 +694,7 @@ Workspace* Workspace::createNewWorkspace(const QString& name)
                   p->setCellReadOnly(i, false);
             }
 
+      preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, false);
       _workspaces.append(p);
       return p;
       }

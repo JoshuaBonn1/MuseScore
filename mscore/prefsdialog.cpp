@@ -25,6 +25,7 @@
 #include "scoreview.h"
 #include "pa.h"
 #include "shortcut.h"
+#include "workspace.h"
 
 #ifdef USE_PORTMIDI
 #include "pm.h"
@@ -162,6 +163,7 @@ PreferenceDialog::PreferenceDialog(QWidget* parent)
       connect(instrumentList1Button,  SIGNAL(clicked()), SLOT(selectInstrumentList1()));
       connect(instrumentList2Button,  SIGNAL(clicked()), SLOT(selectInstrumentList2()));
       connect(startWithButton,        SIGNAL(clicked()), SLOT(selectStartWith()));
+      connect(customPreferences,      SIGNAL(clicked(bool)), SLOT(loadCustomPreferences(bool)));
 
       connect(shortcutList,   SIGNAL(itemActivated(QTreeWidgetItem*, int)), SLOT(defineShortcutClicked()));
       connect(resetShortcut,  SIGNAL(clicked()), SLOT(resetShortcutClicked()));
@@ -332,6 +334,12 @@ void PreferenceDialog::updateValues(bool useDefaultValues)
       playPanelShow->setChecked(preferences.getBool(PREF_UI_APP_STARTUP_SHOWPLAYPANEL));
       showSplashScreen->setChecked(preferences.getBool(PREF_UI_APP_STARTUP_SHOWSPLASHSCREEN));
       showStartcenter->setChecked(preferences.getBool(PREF_UI_APP_STARTUP_SHOWSTARTCENTER));
+
+      customPreferences->setChecked(preferences.getBool(PREF_UI_APP_LOADCUSTOMPREFERENCES));
+      if (Workspace::currentWorkspace->isBuiltInWorkspace())
+            customPreferences->setEnabled(false);
+      else
+            customPreferences->setEnabled(true);
 
       alsaDriver->setChecked(preferences.getBool(PREF_IO_ALSA_USEALSAAUDIO));
       jackDriver->setChecked(preferences.getBool(PREF_IO_JACK_USEJACKAUDIO) || preferences.getBool(PREF_IO_JACK_USEJACKMIDI));
@@ -771,6 +779,16 @@ void PreferenceDialog::selectStartWith()
       }
 
 //---------------------------------------------------------
+//   loadCustomPreferences
+//---------------------------------------------------------
+
+void PreferenceDialog::loadCustomPreferences(bool clicked)
+      {
+      preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, clicked);
+      updateValues();
+      }
+
+//---------------------------------------------------------
 //   fgClicked
 //---------------------------------------------------------
 
@@ -837,6 +855,8 @@ void PreferenceDialog::buttonBoxClicked(QAbstractButton* button)
 
 void PreferenceDialog::apply()
       {
+      preferences.setPreference(PREF_UI_APP_LOADCUSTOMPREFERENCES, customPreferences->isChecked());
+
       if (lastSession->isChecked())
             preferences.setCustomPreference<SessionStart>(PREF_APP_STARTUP_SESSIONSTART, SessionStart::LAST);
       else if (newSession->isChecked())

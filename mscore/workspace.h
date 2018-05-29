@@ -83,7 +83,6 @@ class Workspace : public QObject {
       static QList<Workspace*>& workspaces();
       static Workspace* createNewWorkspace(const QString& name);
       static bool workspacesRead;
-      static void writeBuiltinWorkspace();
       static void addActionAndString(QAction* action, QString string);
       static void addRemainingFromMenuBar(QMenuBar* mb);
       static void addMenuAndString(QMenu* menu, QString string);

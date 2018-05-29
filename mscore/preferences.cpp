@@ -158,6 +158,7 @@ void Preferences::init(bool storeInMemoryOnly)
             {PREF_UI_APP_RASTER_VERTICAL,                          Preference(2)},
             {PREF_UI_APP_SHOWSTATUSBAR,                            Preference(true)},
             {PREF_UI_APP_USENATIVEDIALOGS,                         Preference(nativeDialogs)},
+            {PREF_UI_APP_LOADCUSTOMPREFERENCES,                    Preference(false)},
             {PREF_UI_PIANO_HIGHLIGHTCOLOR,                         Preference(QColor("#1259d0"))},
             {PREF_UI_SCORE_NOTE_DROPCOLOR,                         Preference(QColor("#1778db"))},
             {PREF_UI_SCORE_DEFAULTCOLOR,                           Preference(QColor("#000000"))},
@@ -207,8 +208,10 @@ QVariant Preferences::get(const QString key) const
             return (pref != _inMemorySettings.end()) ? pref->second : QVariant(); // invalid QVariant returned when not found
       else if (pref != _inMemorySettings.end()) // if there exists a temporary value stored "in memory" return this value
             return pref->second;
-      else if (Workspace::currentWorkspace &&
+      else if (key != PREF_UI_APP_LOADCUSTOMPREFERENCES &&
+               Workspace::currentWorkspace &&
                !Workspace::currentWorkspace->isBuiltInWorkspace() &&
+               getBool(PREF_UI_APP_LOADCUSTOMPREFERENCES) &&
                local_pref != Workspace::localPreferences.end())
             return local_pref->second;
       else
@@ -223,6 +226,7 @@ void Preferences::set(const QString key, QVariant value, bool temporary)
             _inMemorySettings[key.toStdString()] = value;
       else if (Workspace::currentWorkspace &&
                !Workspace::currentWorkspace->isBuiltInWorkspace() &&
+               getBool(PREF_UI_APP_LOADCUSTOMPREFERENCES) &&
                local_pref != Workspace::localPreferences.end())
             Workspace::localPreferences[key.toStdString()] = value;
       else
