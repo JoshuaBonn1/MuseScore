@@ -335,12 +335,6 @@ void PreferenceDialog::updateValues(bool useDefaultValues)
       showSplashScreen->setChecked(preferences.getBool(PREF_UI_APP_STARTUP_SHOWSPLASHSCREEN));
       showStartcenter->setChecked(preferences.getBool(PREF_UI_APP_STARTUP_SHOWSTARTCENTER));
 
-      customPreferences->setChecked(preferences.getBool(PREF_UI_APP_USECUSTOMPREFERENCES));
-      if (Workspace::currentWorkspace->isBuiltInWorkspace())
-            customPreferences->setEnabled(false);
-      else
-            customPreferences->setEnabled(true);
-
       alsaDriver->setChecked(preferences.getBool(PREF_IO_ALSA_USEALSAAUDIO));
       jackDriver->setChecked(preferences.getBool(PREF_IO_JACK_USEJACKAUDIO) || preferences.getBool(PREF_IO_JACK_USEJACKMIDI));
       useJackAudio->setChecked(preferences.getBool(PREF_IO_JACK_USEJACKAUDIO));
@@ -779,16 +773,6 @@ void PreferenceDialog::selectStartWith()
       }
 
 //---------------------------------------------------------
-//   loadCustomPreferences
-//---------------------------------------------------------
-
-void PreferenceDialog::loadCustomPreferences(bool clicked)
-      {
-      preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, clicked);
-      updateValues();
-      }
-
-//---------------------------------------------------------
 //   fgClicked
 //---------------------------------------------------------
 
@@ -855,8 +839,6 @@ void PreferenceDialog::buttonBoxClicked(QAbstractButton* button)
 
 void PreferenceDialog::apply()
       {
-      preferences.setPreference(PREF_UI_APP_USECUSTOMPREFERENCES, customPreferences->isChecked());
-
       if (lastSession->isChecked())
             preferences.setCustomPreference<SessionStart>(PREF_APP_STARTUP_SESSIONSTART, SessionStart::LAST);
       else if (newSession->isChecked())

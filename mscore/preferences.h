@@ -166,7 +166,6 @@ enum class MusicxmlExportBreaks : char {
 #define PREF_UI_APP_RASTER_VERTICAL                         "ui/application/raster/vertical"
 #define PREF_UI_APP_SHOWSTATUSBAR                           "ui/application/showStatusBar"
 #define PREF_UI_APP_USENATIVEDIALOGS                        "ui/application/useNativeDialogs"
-#define PREF_UI_APP_USECUSTOMPREFERENCES                   "ui/application/loadCustomPreferences"
 #define PREF_UI_PIANO_HIGHLIGHTCOLOR                        "ui/piano/highlightColor"
 #define PREF_UI_SCORE_NOTE_DROPCOLOR                        "ui/score/note/dropColor"
 #define PREF_UI_SCORE_DEFAULTCOLOR                          "ui/score/defaultColor"

@@ -79,6 +79,7 @@ class Timeline;
 class PianoTools;
 class MediaDialog;
 class Workspace;
+class WorkspaceDialog;
 class AlbumManager;
 class WebPageDockWidget;
 class ChordList;
@@ -380,6 +381,8 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       QFileDialog* saveDrumsetDialog     { 0 };
       QFileDialog* savePluginDialog      { 0 };
 
+      WorkspaceDialog* _workspaceDialog   { 0 };
+
       QDialog* editRasterDialog          { 0 };
 
       QAction* hRasterAction;
@@ -533,6 +536,7 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       void showMasterPalette(const QString& = 0);
       void selectionChanged(SelState);
       void createNewWorkspace();
+      void editWorkspace();
       void changeWorkspace(Workspace* p);
       void mixerPreferencesChanged(bool showMidiControls);
 
@@ -725,6 +729,8 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       static Palette* newBarLinePalette(PaletteType);
       static Palette* newLinesPalette(PaletteType);
       static Palette* newFretboardDiagramPalette();
+
+      WorkspaceDialog* workspaceDialog() { return _workspaceDialog; }
 
       Inspector* inspector()           { return _inspector; }
       PluginCreator* pluginCreator()   { return _pluginCreator; }

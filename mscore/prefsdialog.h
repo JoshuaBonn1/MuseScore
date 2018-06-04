@@ -76,7 +76,6 @@ class PreferenceDialog : public AbstractDialog, private Ui::PrefsDialogBase {
       void selectImagesDirectory();
       void printShortcutsClicked();
       void filterShortcutsTextChanged(const QString &);
-      void loadCustomPreferences(bool);
 
       void changeSoundfontPaths();
       void updateTranslationClicked();

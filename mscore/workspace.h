@@ -21,6 +21,7 @@
 #ifndef __WORKSPACE_H__
 #define __WORKSPACE_H__
 
+
 namespace Ms {
 
 class XmlReader;
@@ -86,6 +87,11 @@ class Workspace : public QObject {
       static void addActionAndString(QAction* action, QString string);
       static void addRemainingFromMenuBar(QMenuBar* mb);
       static void addMenuAndString(QMenu* menu, QString string);
+
+      bool saveComponents;
+      bool saveToolbars;
+      bool saveMenuBar;
+      bool savePrefs;
 
       static std::unordered_map<std::string, QVariant> localPreferences;
       };
