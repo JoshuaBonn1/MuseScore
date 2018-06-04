@@ -69,6 +69,7 @@ class Workspace : public QObject {
       void setPath(const QString& s) { _path = s;     }
       QString name() const           { return _name;  }
       void setName(const QString& s) { _name = s;     }
+      void rename(const QString& s);
       bool dirty() const             { return _dirty; }
 
       void save();

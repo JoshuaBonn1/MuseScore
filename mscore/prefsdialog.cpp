@@ -163,7 +163,6 @@ PreferenceDialog::PreferenceDialog(QWidget* parent)
       connect(instrumentList1Button,  SIGNAL(clicked()), SLOT(selectInstrumentList1()));
       connect(instrumentList2Button,  SIGNAL(clicked()), SLOT(selectInstrumentList2()));
       connect(startWithButton,        SIGNAL(clicked()), SLOT(selectStartWith()));
-      connect(customPreferences,      SIGNAL(clicked(bool)), SLOT(loadCustomPreferences(bool)));
 
       connect(shortcutList,   SIGNAL(itemActivated(QTreeWidgetItem*, int)), SLOT(defineShortcutClicked()));
       connect(resetShortcut,  SIGNAL(clicked()), SLOT(resetShortcutClicked()));

@@ -1191,5 +1191,17 @@ void Workspace::loadDefaultMenuBar() {
       menu->addAction(findActionFromString("revert-factory"));
       }
 
+//---------------------------------------------------------
+//   rename
+//---------------------------------------------------------
+
+void Workspace::rename(const QString& s)
+      {
+      QFile file (_path);
+      file.remove();
+      setName(s);
+      _path = "";
+      save();
+      }
 }
 

@@ -23,10 +23,12 @@ WorkspaceDialog::WorkspaceDialog(QWidget* parent)
       {
       setObjectName("WorkspaceDialog");
       setupUi(this);
+      retranslateUi(this);
       setWindowFlags(this->windowFlags() & ~Qt::WindowContextHelpButtonHint);
       MuseScore::restoreGeometry(this);
 
       connect(buttonBox, SIGNAL(accepted()), SLOT(accepted()));
+      connect(buttonBox, SIGNAL(rejected()), SLOT(close()));
       }
 
 void WorkspaceDialog::display()
@@ -37,6 +39,7 @@ void WorkspaceDialog::display()
             menubarCheck->setChecked(Workspace::currentWorkspace->saveMenuBar);
             prefsCheck->setChecked(Workspace::currentWorkspace->savePrefs);
             nameLineEdit->setText(Workspace::currentWorkspace->name());
+            setWindowTitle(tr("Edit Workspace"));
             }
       else {
             componentsCheck->setChecked(false);
@@ -44,6 +47,7 @@ void WorkspaceDialog::display()
             menubarCheck->setChecked(false);
             prefsCheck->setChecked(false);
             nameLineEdit->setText("");
+            setWindowTitle(tr("Create New Workspace"));
             }
       show();
       }
@@ -79,40 +83,28 @@ void WorkspaceDialog::accepted()
                   break;
             }
 
-      // When this is accepted, I need to update the workspace. This will include the name and everything... So, I should check if it is in edit mode or creation mode?
-      // That should be pretty easy, just set a flag whenever it is called.
-      if (editMode) {
-            // update all flags and name
-            Workspace::currentWorkspace->saveComponents = componentsCheck->isChecked();
-            Workspace::currentWorkspace->saveToolbars   = toolbarsCheck->isChecked();
-            Workspace::currentWorkspace->saveMenuBar    = menubarCheck->isChecked();
-            Workspace::currentWorkspace->savePrefs      = prefsCheck->isChecked();
-
-            Workspace::currentWorkspace->save();
-            preferences.setPreference(PREF_APP_WORKSPACE, Workspace::currentWorkspace->name());
-            PaletteBox* paletteBox = mscore->getPaletteBox();
-            paletteBox->updateWorkspaces();
-            }
-      else {
-            // Create new workspace with name given
-            // Update all flags
+      if (!editMode) {
             if (Workspace::currentWorkspace->dirty())
                   Workspace::currentWorkspace->save();
             Workspace::currentWorkspace = Workspace::createNewWorkspace(s);
-            Workspace::currentWorkspace->saveComponents = componentsCheck->isChecked();
-            Workspace::currentWorkspace->saveToolbars   = toolbarsCheck->isChecked();
-            Workspace::currentWorkspace->saveMenuBar    = menubarCheck->isChecked();
-            Workspace::currentWorkspace->savePrefs      = prefsCheck->isChecked();
-
-            preferences.setPreference(PREF_APP_WORKSPACE, Workspace::currentWorkspace->name());
-            PaletteBox* paletteBox = mscore->getPaletteBox();
-            paletteBox->updateWorkspaces();
             }
+
+      Workspace::currentWorkspace->saveComponents = componentsCheck->isChecked();
+      Workspace::currentWorkspace->saveToolbars   = toolbarsCheck->isChecked();
+      Workspace::currentWorkspace->saveMenuBar    = menubarCheck->isChecked();
+      Workspace::currentWorkspace->savePrefs      = prefsCheck->isChecked();
+
+      if (editMode) {
+            // I need to delete the old file and rename it to the new name
+            if (Workspace::currentWorkspace->name() != s)
+                  Workspace::currentWorkspace->rename(s);
+            else
+                  Workspace::currentWorkspace->save();
+            }
+
+      preferences.setPreference(PREF_APP_WORKSPACE, Workspace::currentWorkspace->name());
+      PaletteBox* paletteBox = mscore->getPaletteBox();
+      paletteBox->updateWorkspaces();
       close();
       }
 }
-
-//componentsCheck->setChecked(Workspace::currentWorkspace->saveComponents);
-//toolbarsCheck->setChecked(Workspace::currentWorkspace->saveToolbars);
-//menubarCheck->setChecked(Workspace::currentWorkspace->saveMenuBar);
-//prefsCheck->setChecked(Workspace::currentWorkspace->savePrefs);
