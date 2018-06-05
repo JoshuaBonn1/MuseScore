@@ -302,7 +302,6 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
 
       QMenu* menuPlugins;
       QMenu* menuHelp;
-      void populateDefaultMenuBar();
 
       AlbumManager* albumManager           { 0 };
 
