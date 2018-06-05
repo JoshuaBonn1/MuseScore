@@ -93,13 +93,11 @@ void WorkspaceDialog::accepted()
       Workspace::currentWorkspace->saveToolbars   = toolbarsCheck->isChecked();
       Workspace::currentWorkspace->saveMenuBar    = menubarCheck->isChecked();
       Workspace::currentWorkspace->savePrefs      = prefsCheck->isChecked();
+      Workspace::currentWorkspace->save();
 
       if (editMode) {
-            // I need to delete the old file and rename it to the new name
             if (Workspace::currentWorkspace->name() != s)
                   Workspace::currentWorkspace->rename(s);
-            else
-                  Workspace::currentWorkspace->save();
             }
 
       preferences.setPreference(PREF_APP_WORKSPACE, Workspace::currentWorkspace->name());
