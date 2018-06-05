@@ -95,10 +95,8 @@ void WorkspaceDialog::accepted()
       Workspace::currentWorkspace->savePrefs      = prefsCheck->isChecked();
       Workspace::currentWorkspace->save();
 
-      if (editMode) {
-            if (Workspace::currentWorkspace->name() != s)
-                  Workspace::currentWorkspace->rename(s);
-            }
+      if (editMode && Workspace::currentWorkspace->name() != s)
+            Workspace::currentWorkspace->rename(s);
 
       preferences.setPreference(PREF_APP_WORKSPACE, Workspace::currentWorkspace->name());
       PaletteBox* paletteBox = mscore->getPaletteBox();
