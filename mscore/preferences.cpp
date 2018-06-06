@@ -21,6 +21,7 @@
 #include "libmscore/style.h"
 #include "libmscore/mscore.h"
 #include "preferences.h"
+#include "workspace.h"
 
 namespace Ms {
 
@@ -174,6 +175,7 @@ void Preferences::init(bool storeInMemoryOnly)
       });
 
       _initialized = true;
+      Workspace::localPreferences = getWorkspaceRelevantPreferences();
       }
 
 void Preferences::save()
@@ -201,19 +203,33 @@ QSettings* Preferences::settings() const
 QVariant Preferences::get(const QString key) const
       {
       QVariant pref = _inMemorySettings.value(key);
+      // Used to load custom presets if no currently loaded settings exist
+      auto local_pref = Workspace::localPreferences.find(key.toStdString());
 
       if (_storeInMemoryOnly)
             return (_inMemorySettings.contains(key)) ? pref : QVariant(); // invalid QVariant returned when not found
       else if (_inMemorySettings.contains(key)) // if there exists a temporary value stored "in memory" return this value
             return pref;
+      else if (Workspace::currentWorkspace &&
+               !Workspace::currentWorkspace->isBuiltInWorkspace() &&
+               Workspace::currentWorkspace->savePrefs &&
+               local_pref != Workspace::localPreferences.end())
+            return local_pref->second;
       else
             return settings()->value(key);
       }
 
 void Preferences::set(const QString key, QVariant value, bool temporary)
       {
+      auto local_pref = Workspace::localPreferences.find(key.toStdString());
+
       if (_storeInMemoryOnly || temporary)
             _inMemorySettings[key] = value;
+      else if (Workspace::currentWorkspace &&
+               !Workspace::currentWorkspace->isBuiltInWorkspace() &&
+               Workspace::currentWorkspace->savePrefs &&
+               local_pref != Workspace::localPreferences.end())
+            Workspace::localPreferences[key.toStdString()] = value;
       else
             settings()->setValue(key, value);
       }
@@ -402,6 +418,46 @@ void Preferences::clearMidiRemote(int recordId)
       {
       QString baseKey = QString(PREF_IO_MIDI_REMOTE) + QString("%1%2").arg("/").arg(recordId);
       remove(baseKey);
+      }
+
+std::unordered_map<std::string, QVariant> Preferences::getWorkspaceRelevantPreferences() {
+      std::unordered_map<std::string, QVariant> ui_preferences;
+      std::vector<std::string> ui_preferences_vector;
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_BG_USECOLOR);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_FG_USECOLOR);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_BG_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_FG_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_BG_WALLPAPER);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_FG_WALLPAPER);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_MISC_ANTIALIASEDDRAWING);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_MISC_SELECTIONPROXIMITY);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_SCROLL_LIMITSCROLLAREA);
+      ui_preferences_vector.push_back(PREF_UI_CANVAS_SCROLL_VERTICALORIENTATION);
+//      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_CHECKUPDATE);
+//      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_SHOWNAVIGATOR);
+//      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_SHOWPLAYPANEL);
+//      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_SHOWSPLASHSCREEN);
+//      ui_preferences_vector.push_back(PREF_UI_APP_STARTUP_SHOWSTARTCENTER);
+//      ui_preferences_vector.push_back(PREF_UI_APP_GLOBALSTYLE);
+//      ui_preferences_vector.push_back(PREF_UI_APP_LANGUAGE);
+//      ui_preferences_vector.push_back(PREF_UI_APP_RASTER_HORIZONTAL);
+//      ui_preferences_vector.push_back(PREF_UI_APP_RASTER_VERTICAL);
+      ui_preferences_vector.push_back(PREF_UI_APP_SHOWSTATUSBAR);
+      ui_preferences_vector.push_back(PREF_UI_APP_USENATIVEDIALOGS);
+      ui_preferences_vector.push_back(PREF_UI_PIANO_HIGHLIGHTCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_NOTE_DROPCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_DEFAULTCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_FRAMEMARGINCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_LAYOUTBREAKCOLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE1_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE2_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE3_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE4_COLOR);
+      ui_preferences_vector.push_back(PREF_UI_THEME_ICONWIDTH);
+      ui_preferences_vector.push_back(PREF_UI_THEME_ICONHEIGHT);
+      for (auto pref : ui_preferences_vector)
+            ui_preferences.insert({{pref, preference(QString::fromStdString(pref))}});
+      return ui_preferences;
       }
 
 

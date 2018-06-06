@@ -21,6 +21,8 @@
 #ifndef __WORKSPACE_H__
 #define __WORKSPACE_H__
 
+#include <unordered_map>
+
 namespace Ms {
 
 class XmlReader;
@@ -35,6 +37,19 @@ class Workspace : public QObject {
       static QList<Workspace*> _workspaces;
       static Workspace _advancedWorkspace;
       static Workspace _basicWorkspace;
+      static QList<QPair<QAction*, QString>> actionToStringList;
+      static QList<QPair<QMenu*, QString>> menuToStringList;
+
+      static void writeMenuBar(QBuffer* cbuf, QMenuBar* mb = 0);
+      static void writeMenu(QBuffer* cbuf, QMenu* menu);
+      static void addRemainingFromMenu(QMenu* menu);
+
+      void readMenu(XmlReader& e, QMenu* menu);
+
+      static QString findStringFromAction(QAction* action);
+      static QAction* findActionFromString(QString string);
+      static QMenu* findMenuFromString(QString string);
+      static QString findStringFromMenu(QMenu* menu);
 
       QString _name;
       QString _path;
@@ -53,6 +68,7 @@ class Workspace : public QObject {
       void setPath(const QString& s) { _path = s;     }
       QString name() const           { return _name;  }
       void setName(const QString& s) { _name = s;     }
+      void rename(const QString& s);
       bool dirty() const             { return _dirty; }
 
       void save();
@@ -61,13 +77,26 @@ class Workspace : public QObject {
       void read();
       bool readOnly() const          { return _readOnly; }
       void setReadOnly(bool val)     { _readOnly = val;  }
+      bool isBuiltInWorkspace();
 
       static void initWorkspace();
       static Workspace* currentWorkspace;
       static QList<Workspace*>& workspaces();
       static Workspace* createNewWorkspace(const QString& name);
       static bool workspacesRead;
-      static void writeBuiltinWorkspace();
+      static void addActionAndString(QAction* action, QString string);
+      static void addRemainingFromMenuBar(QMenuBar* mb);
+      static void addMenuAndString(QMenu* menu, QString string);
+
+      bool saveComponents;
+      bool saveToolbars;
+      bool saveMenuBar;
+      bool savePrefs;
+
+      static std::unordered_map<std::string, QVariant> localPreferences;
+
+      static void writeDefaultMenuBar(QMenuBar* mb);
+      void readDefaultMenuBar();
       };
 }
 #endif
