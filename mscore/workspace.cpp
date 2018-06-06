@@ -342,6 +342,12 @@ void Workspace::write()
       if (saveMenuBar)
             writeMenuBar(&cbuf);
 
+      if (saveComponents) {
+            QByteArray state_64 = mscore->saveState().toBase64();
+            QString state(state_64);
+            xml.tag("State", state);
+            }
+
       xml.etag();
       xml.etag();
       f.addFile("workspace.xml", cbuf.data());
@@ -612,6 +618,13 @@ void Workspace::read(XmlReader& e)
                                     }
                               }
                         }
+                  }
+            else if (tag == "State") {
+                  saveComponents = true;
+                  QString state_string = e.readXml();
+                  QByteArray state_byte_array_64(state_string.toUtf8());
+                  QByteArray state_byte_array = QByteArray::fromBase64(state_byte_array_64);
+                  mscore->restoreState(state_byte_array);
                   }
             else
                   e.unknown();
