@@ -1431,7 +1431,9 @@ MuseScore::MuseScore()
 
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN)
 #if not defined(FOR_WINSTORE)
-      checkForUpdateAction = menuHelp->addAction("", this, SLOT(checkForUpdate()));
+      checkForUpdateAction = new QAction("", 0);
+      connect(checkForUpdateAction, SIGNAL(triggered()), this, SLOT(checkForUpdate()));
+      menuHelp->addAction(checkForUpdateAction);
       Workspace::addActionAndString(checkForUpdateAction, "check-update");
 #endif
 #endif
@@ -6493,6 +6495,8 @@ int main(int argc, char* av[])
             QString keyboardLayout = preferences.getString(PREF_APP_KEYBOARDLAYOUT);
             StartupWizard::autoSelectShortcuts(keyboardLayout);
             }
+      Workspace::writeGlobalToolBar();
+      Workspace::writeGlobalGUIState();
 
       QApplication::instance()->installEventFilter(mscore);
 
