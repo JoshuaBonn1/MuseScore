@@ -95,8 +95,12 @@ class Workspace : public QObject {
 
       static std::unordered_map<std::string, QVariant> localPreferences;
 
-      static void writeDefaultMenuBar(QMenuBar* mb);
-      void readDefaultMenuBar();
+      static void writeGlobalMenuBar(QMenuBar* mb);
+      void readGlobalMenuBar();
+      static void writeGlobalToolBar();
+      void readGlobalToolBar();
+      static void writeGlobalGUIState();
+      void readGlobalGUIState();
       };
 }
 #endif

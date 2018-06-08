@@ -213,7 +213,7 @@ void MuseScore::changeWorkspace(Workspace* p, bool first)
       p->read();
       Workspace::currentWorkspace = p;
       if (!first)
-            preferencesChanged();
+            preferencesChanged(true);
       }
 
 //---------------------------------------------------------
@@ -327,6 +327,17 @@ void Workspace::write()
             for (auto i : *mscore->noteInputMenuEntries())
                   xml.tag("action", i);
             xml.etag();
+            xml.stag("Toolbar name=\"fileOperation\"");
+            for (auto i : *mscore->fileOperationEntries())
+                  xml.tag("action", i);
+            xml.etag();
+            xml.stag("Toolbar name=\"playbackControl\"");
+            for (auto i : *mscore->playbackControlEntries())
+                  xml.tag("action", i);
+            xml.etag();
+            }
+      else {
+            writeGlobalToolBar();
             }
 
       if (savePrefs) {
@@ -347,6 +358,9 @@ void Workspace::write()
             QByteArray state_64 = mscore->saveState().toBase64();
             QString state(state_64);
             xml.tag("State", state);
+            }
+      else {
+            writeGlobalGUIState();
             }
 
       xml.stag("Toolbar name=\"fileOperation\"");
@@ -370,18 +384,20 @@ void Workspace::write()
       }
 
 //---------------------------------------------------------
-//   writeDefaultMenuBar
-//   writes default menu bar for built-in workspaces
+//   writeGlobalMenuBar
+//   writes global menu bar for workspaces
 //---------------------------------------------------------
 
-void Workspace::writeDefaultMenuBar(QMenuBar* mb)
+void Workspace::writeGlobalMenuBar(QMenuBar* mb)
       {
       QString default_path = "";
       QDir dir;
       dir.mkpath(dataPath);
       default_path = dataPath + "/workspaces";
       dir.mkpath(default_path);
-      default_path += "/default.menubar";
+      default_path += "/global";
+      dir.mkpath(default_path);
+      default_path += "/menubar.xml";
 
       QFile default_menubar (default_path);
       default_menubar.open(QIODevice::WriteOnly);
@@ -401,10 +417,100 @@ void Workspace::writeDefaultMenuBar(QMenuBar* mb)
       writeMenuBar(&cbuf, mb);
 
       xml.etag();
-      QByteArray test = cbuf.data();
-      default_menubar.write(test);
+      default_menubar.write(cbuf.data());
       cbuf.close();
       default_menubar.close();
+      }
+
+//---------------------------------------------------------
+//   writeGlobalToolBar
+//   writes global tool bar for workspaces
+//---------------------------------------------------------
+
+void Workspace::writeGlobalToolBar()
+      {
+      QString default_path = "";
+      QDir dir;
+      dir.mkpath(dataPath);
+      default_path = dataPath + "/workspaces";
+      dir.mkpath(default_path);
+      default_path += "/global";
+      dir.mkpath(default_path);
+      default_path += "/toolbar.xml";
+
+      QFile default_toolbar (default_path);
+      default_toolbar.open(QIODevice::WriteOnly);
+
+      if (!default_toolbar.exists()) {
+            writeFailed(default_path);
+            return;
+            }
+
+      QBuffer cbuf;
+      cbuf.open(QIODevice::ReadWrite);
+      XmlWriter xml(gscore, &cbuf);
+      xml.setClipboardmode(true);
+      xml.header();
+      xml.stag("museScore version=\"" MSC_VERSION "\"");
+
+      xml.stag("Toolbar name=\"noteInput\"");
+      for (auto i : *mscore->noteInputMenuEntries())
+            xml.tag("action", i);
+      xml.etag();
+      xml.stag("Toolbar name=\"fileOperation\"");
+      for (auto i : *mscore->fileOperationEntries())
+            xml.tag("action", i);
+      xml.etag();
+      xml.stag("Toolbar name=\"playbackControl\"");
+      for (auto i : *mscore->playbackControlEntries())
+            xml.tag("action", i);
+      xml.etag();
+
+      xml.etag();
+      default_toolbar.write(cbuf.data());
+      cbuf.close();
+      default_toolbar.close();
+      }
+
+//---------------------------------------------------------
+//   writeGlobalGUIState
+//   writes global GUI state for workspaces
+//---------------------------------------------------------
+
+void Workspace::writeGlobalGUIState()
+      {
+      QString default_path = "";
+      QDir dir;
+      dir.mkpath(dataPath);
+      default_path = dataPath + "/workspaces";
+      dir.mkpath(default_path);
+      default_path += "/global";
+      dir.mkpath(default_path);
+      default_path += "/guistate.xml";
+
+      QFile default_guistate (default_path);
+      default_guistate.open(QIODevice::WriteOnly);
+
+      if (!default_guistate.exists()) {
+            writeFailed(default_path);
+            return;
+            }
+
+      QBuffer cbuf;
+      cbuf.open(QIODevice::ReadWrite);
+      XmlWriter xml(gscore, &cbuf);
+      xml.setClipboardmode(true);
+      xml.header();
+      xml.stag("museScore version=\"" MSC_VERSION "\"");
+
+      QByteArray state_64 = mscore->saveState().toBase64();
+      QString state(state_64);
+      xml.tag("State", state);
+
+      xml.etag();
+      default_guistate.write(cbuf.data());
+      cbuf.close();
+      default_guistate.close();
       }
 
 //---------------------------------------------------------
@@ -473,7 +579,8 @@ void Workspace::read()
             mscore->populateFileOperations();
             mscore->setPlaybackControlEntries(mscore->allPlaybackControlEntries());
             mscore->populatePlaybackControls();
-            readDefaultMenuBar();
+            readGlobalMenuBar();
+            readGlobalGUIState();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
             return;
             }
@@ -487,7 +594,8 @@ void Workspace::read()
             mscore->populateFileOperations();
             mscore->setPlaybackControlEntries(mscore->allPlaybackControlEntries());
             mscore->populatePlaybackControls();
-            readDefaultMenuBar();
+            readGlobalMenuBar();
+            readGlobalGUIState();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
             return;
             }
@@ -500,7 +608,8 @@ void Workspace::read()
             mscore->setPlaybackControlEntries(mscore->allPlaybackControlEntries());
             mscore->populatePlaybackControls();
             mscore->setAdvancedPalette();       // set default palette
-            readDefaultMenuBar();
+            readGlobalMenuBar();
+            readGlobalGUIState();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
             return;
             }
@@ -676,18 +785,27 @@ void Workspace::read(XmlReader& e)
             else
                   e.unknown();
             }
-      if (!niToolbar) {
-            mscore->setNoteInputMenuEntries(mscore->allNoteInputMenuEntries());
-            mscore->populateNoteInputMenu();
+      if (saveToolbars) {
+            if (!niToolbar) {
+                  mscore->setNoteInputMenuEntries(mscore->allNoteInputMenuEntries());
+                  mscore->populateNoteInputMenu();
+                  }
+            if (!foToolbar) {
+                  mscore->setFileOperationEntries(mscore->allFileOperationEntries());
+                  mscore->populateFileOperations();
+                  }
+            if (!pcToolbar) {
+                  mscore->setPlaybackControlEntries(mscore->allPlaybackControlEntries());
+                  mscore->populatePlaybackControls();
+                  }
             }
-      if (!foToolbar) {
-            mscore->setFileOperationEntries(mscore->allFileOperationEntries());
-            mscore->populateFileOperations();
+      else {
+            readGlobalToolBar();
             }
-      if (!pcToolbar) {
-            mscore->setPlaybackControlEntries(mscore->allPlaybackControlEntries());
-            mscore->populatePlaybackControls();
-            }
+      if (!saveMenuBar)
+            readGlobalMenuBar();
+      if (!saveComponents)
+            readGlobalGUIState();
       }
 
 //---------------------------------------------------------
@@ -724,12 +842,12 @@ void Workspace::readMenu(XmlReader& e, QMenu* menu)
       }
 
 //---------------------------------------------------------
-//   readDefaultMenuBar
+//   readGlobalMenuBar
 //---------------------------------------------------------
 
-void Workspace::readDefaultMenuBar()
+void Workspace::readGlobalMenuBar()
       {
-      QString default_path = dataPath + "/workspaces/default.menubar";
+      QString default_path = dataPath + "/workspaces/global/menubar.xml";
 
       QFile default_menubar(default_path);
       default_menubar.open(QIODevice::ReadOnly);
@@ -768,6 +886,100 @@ void Workspace::readDefaultMenuBar()
                                                 }
                                           }
                                     }
+                              }
+                        else
+                              e.unknown();
+                        }
+                  }
+            }
+      }
+
+//---------------------------------------------------------
+//   readGlobalToolBar
+//---------------------------------------------------------
+
+void Workspace::readGlobalToolBar()
+      {
+      QString default_path = dataPath + "/workspaces/global/toolbar.xml";
+
+      QFile default_toolbar(default_path);
+      default_toolbar.open(QIODevice::ReadOnly);
+
+      QByteArray ba (default_toolbar.readAll());
+      XmlReader e(ba);
+
+      while (e.readNextStartElement()) {
+            if (e.name() == "museScore") {
+                  while (e.readNextStartElement()) {
+                        if (e.name() == "ToolBar") {
+                              QString name = e.attribute("name");
+                              std::list<const char *> toolbarEntries;
+                              if (name == "noteInput")
+                                    toolbarEntries = mscore->allNoteInputMenuEntries();
+                              else if (name == "fileOperation")
+                                    toolbarEntries = mscore->allFileOperationEntries();
+                              else if (name == "playbackControl")
+                                    toolbarEntries = mscore->allPlaybackControlEntries();
+                              else
+                                    qDebug() << "Error in loading workspace: " + name + " is not a toolbar";
+
+                              std::list<const char*> l;
+                              while (e.readNextStartElement()) {
+                                    const QStringRef& tag(e.name());
+                                    if (tag == "action") {
+                                          QString s = e.readElementText();
+                                          for (auto k : toolbarEntries) {
+                                                if (k == s) {
+                                                      l.push_back(k);
+                                                      break;
+                                                      }
+                                                }
+                                          }
+                                    else
+                                          e.unknown();
+                                    }
+                              if (name == "noteInput") {
+                                    mscore->setNoteInputMenuEntries(l);
+                                    mscore->populateNoteInputMenu();
+                                    }
+                              else if (name == "fileOperation") {
+                                    mscore->setFileOperationEntries(l);
+                                    mscore->populateFileOperations();
+                                    }
+                              else if (name == "playbackControl") {
+                                    mscore->setPlaybackControlEntries(l);
+                                    mscore->populatePlaybackControls();
+                                    }
+                              }
+                        else
+                              e.unknown();
+                        }
+                  }
+            }
+      }
+
+//---------------------------------------------------------
+//   readGlobalGUIState
+//---------------------------------------------------------
+
+void Workspace::readGlobalGUIState()
+      {
+      QString default_path = dataPath + "/workspaces/global/guistate.xml";
+
+      QFile default_toolbar(default_path);
+      default_toolbar.open(QIODevice::ReadOnly);
+
+      QByteArray ba (default_toolbar.readAll());
+      XmlReader e(ba);
+
+      while (e.readNextStartElement()) {
+            if (e.name() == "museScore") {
+                  while (e.readNextStartElement()) {
+                        if (e.name() == "State") {
+                              QString state_string = e.readXml();
+                              QByteArray state_byte_array_64(state_string.toUtf8());
+                              QByteArray state_byte_array = QByteArray::fromBase64(state_byte_array_64);
+                              mscore->restoreState(state_byte_array);
                               }
                         else
                               e.unknown();

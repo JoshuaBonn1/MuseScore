@@ -479,7 +479,7 @@ void updateExternalValuesFromPreferences() {
 //   preferencesChanged
 //---------------------------------------------------------
 
-void MuseScore::preferencesChanged()
+void MuseScore::preferencesChanged(bool fromWorkspace)
       {
       updateExternalValuesFromPreferences();
 
@@ -538,7 +538,7 @@ void MuseScore::preferencesChanged()
       playId->setEnabled(!noSeq && seq && seq->isRunning());
 
       // change workspace
-      if (preferences.getString(PREF_APP_WORKSPACE) != Workspace::currentWorkspace->name()) {
+      if (!fromWorkspace && preferences.getString(PREF_APP_WORKSPACE) != Workspace::currentWorkspace->name()) {
             Workspace* workspace = 0;
             for (Workspace* w: Workspace::workspaces()) {
                   if (w->name() == preferences.getString(PREF_APP_WORKSPACE)) {
@@ -1481,7 +1481,7 @@ MuseScore::MuseScore()
       Workspace::addMenuAndString(menuPlugins, "menu-plugins");
       Workspace::addMenuAndString(menuHelp, "menu-help");
 
-      Workspace::writeDefaultMenuBar(mb);
+      Workspace::writeGlobalMenuBar(mb);
 
       if (!MScore::noGui) {
             retranslate(true);
