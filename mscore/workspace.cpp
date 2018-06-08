@@ -352,7 +352,7 @@ void Workspace::write()
             }
 
       if (saveMenuBar)
-            writeMenuBar(&cbuf);
+            writeMenuBar(xml);
 
       if (saveComponents) {
             QByteArray state_64 = mscore->saveState().toBase64();
@@ -414,7 +414,7 @@ void Workspace::writeGlobalMenuBar(QMenuBar* mb)
       xml.header();
       xml.stag("museScore version=\"" MSC_VERSION "\"");
 
-      writeMenuBar(&cbuf, mb);
+      writeMenuBar(xml, mb);
 
       xml.etag();
       default_menubar.write(cbuf.data());
@@ -517,10 +517,9 @@ void Workspace::writeGlobalGUIState()
 //   writeMenuBar
 //---------------------------------------------------------
 
-void Workspace::writeMenuBar(QBuffer* cbuf, QMenuBar* mb)
+void Workspace::writeMenuBar(XmlWriter& xml, QMenuBar* mb)
       {
       // Loop through each menu in menubar. For each menu, call writeMenu.
-      XmlWriter xml(gscore, cbuf);
       xml.stag("MenuBar");
       if (!mb)
             mb = mscore->menuBar();
@@ -529,11 +528,12 @@ void Workspace::writeMenuBar(QBuffer* cbuf, QMenuBar* mb)
                   xml.tag("action", "");
             else if (action->menu()) {
                   xml.stag("Menu name=\"" + findStringFromMenu(action->menu()) + "\"");
-                  writeMenu(cbuf, action->menu());
+                  writeMenu(xml, action->menu());
                   xml.etag();
                   }
             else
                   xml.tag("action", findStringFromAction(action));
+
             }
       xml.etag();
       }
@@ -542,16 +542,15 @@ void Workspace::writeMenuBar(QBuffer* cbuf, QMenuBar* mb)
 //   writeMenu
 //---------------------------------------------------------
 
-void Workspace::writeMenu(QBuffer* cbuf, QMenu* menu)
+void Workspace::writeMenu(XmlWriter& xml, QMenu* menu)
       {
-      XmlWriter xml(gscore, cbuf);
       // Recursively save QMenu
       for (QAction* action : menu->actions()) {
             if (action->isSeparator())
                   xml.tag("action", "");
             else if (action->menu()) {
                   xml.stag("Menu name=\"" + findStringFromMenu(action->menu()) + "\"");
-                  writeMenu(cbuf, action->menu());
+                  writeMenu(xml, action->menu());
                   xml.etag();
                   }
             else {

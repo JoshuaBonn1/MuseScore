@@ -26,6 +26,7 @@
 namespace Ms {
 
 class XmlReader;
+class XmlWriter;
 
 //---------------------------------------------------------
 //   Workspace
@@ -40,8 +41,8 @@ class Workspace : public QObject {
       static QList<QPair<QAction*, QString>> actionToStringList;
       static QList<QPair<QMenu*, QString>> menuToStringList;
 
-      static void writeMenuBar(QBuffer* cbuf, QMenuBar* mb = 0);
-      static void writeMenu(QBuffer* cbuf, QMenu* menu);
+      static void writeMenuBar(XmlWriter& xml, QMenuBar* mb = 0);
+      static void writeMenu(XmlWriter& xml, QMenu* menu);
       static void addRemainingFromMenu(QMenu* menu);
 
       void readMenu(XmlReader& e, QMenu* menu);
