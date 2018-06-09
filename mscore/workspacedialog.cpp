@@ -64,8 +64,7 @@ void WorkspaceDialog::accepted()
                   break;
             bool notFound = true;
             for (Workspace* p : Workspace::workspaces()) {
-                  if ((qApp->translate("Ms::Workspace", p->name().toUtf8()).toLower() == s.toLower()) ||
-                     (s.toLower() == QString("basic")) || (s.toLower() == QString("advanced"))) {
+                  if ((qApp->translate("Ms::Workspace", p->name().toUtf8()).toLower() == s.toLower())) {
                         notFound = false;
                         break;
                         }

@@ -34,18 +34,7 @@ namespace Ms {
 bool Workspace::workspacesRead = false;
 Workspace* Workspace::currentWorkspace;
 
-Workspace Workspace::_advancedWorkspace {
-      QT_TR_NOOP("Advanced"), QString("Advanced"), false, true
-      };
-
-Workspace Workspace::_basicWorkspace {
-      QT_TR_NOOP("Basic"), QString("Basic"), false, true
-      };
-
-QList<Workspace*> Workspace::_workspaces {
-      &_basicWorkspace,
-      &_advancedWorkspace
-      };
+QList<Workspace*> Workspace::_workspaces {};
 
 QList<QPair<QAction*, QString>> Workspace::actionToStringList {};
 QList<QPair<QMenu*  , QString>> Workspace::menuToStringList   {};
@@ -130,7 +119,7 @@ void MuseScore::createNewWorkspace()
 
 void MuseScore::editWorkspace()
       {
-      if (!Workspace::currentWorkspace || Workspace::currentWorkspace->isBuiltInWorkspace())
+      if (!Workspace::currentWorkspace && !Workspace::currentWorkspace->readOnly())
             return;
       if (!_workspaceDialog)
             _workspaceDialog = new WorkspaceDialog();
@@ -154,7 +143,7 @@ void MuseScore::deleteWorkspace()
             return;
       Workspace* workspace = 0;
       for (Workspace* p : Workspace::workspaces()) {
-            if (p->name() == a->text()) { // no need for qApp->translate since "Basic" and "Advanced" are not deletable
+            if (p->name() == a->text()) {
                   workspace = p;
                   break;
                   }
@@ -568,46 +557,11 @@ extern QString readRootFile(MQZipReader*, QList<QString>&);
 void Workspace::read()
       {
       saveToolbars = savePrefs = saveMenuBar = saveComponents = false;
-      if (_path == "Advanced") {
-            mscore->setAdvancedPalette();
-            for (Palette* p : mscore->getPaletteBox()->palettes())
-                  p->setSystemPalette(true);
-            mscore->setNoteInputMenuEntries(MuseScore::advancedNoteInputMenuEntries());
-            mscore->populateNoteInputMenu();
-            mscore->setFileOperationEntries(mscore->allFileOperationEntries());
-            mscore->populateFileOperations();
-            mscore->setPlaybackControlEntries(mscore->allPlaybackControlEntries());
-            mscore->populatePlaybackControls();
-            readGlobalMenuBar();
-            readGlobalGUIState();
-            localPreferences = preferences.getWorkspaceRelevantPreferences();
-            return;
-            }
-      if (_path == "Basic") {
-            mscore->setBasicPalette();
-            for (Palette* p : mscore->getPaletteBox()->palettes())
-                  p->setSystemPalette(true);
-            mscore->setNoteInputMenuEntries(MuseScore::basicNoteInputMenuEntries());
-            mscore->populateNoteInputMenu();
-            mscore->setFileOperationEntries(mscore->allFileOperationEntries());
-            mscore->populateFileOperations();
-            mscore->setPlaybackControlEntries(mscore->allPlaybackControlEntries());
-            mscore->populatePlaybackControls();
-            readGlobalMenuBar();
-            readGlobalGUIState();
-            localPreferences = preferences.getWorkspaceRelevantPreferences();
-            return;
-            }
       if (_path.isEmpty() || !QFile(_path).exists()) {
             qDebug("cannot read workspace <%s>", qPrintable(_path));
-            mscore->setNoteInputMenuEntries(MuseScore::advancedNoteInputMenuEntries());
-            mscore->populateNoteInputMenu();
-            mscore->setFileOperationEntries(mscore->allFileOperationEntries());
-            mscore->populateFileOperations();
-            mscore->setPlaybackControlEntries(mscore->allPlaybackControlEntries());
-            mscore->populatePlaybackControls();
-            mscore->setAdvancedPalette();       // set default palette
+            mscore->setDefaultPalette();
             readGlobalMenuBar();
+            readGlobalToolBar();
             readGlobalGUIState();
             localPreferences = preferences.getWorkspaceRelevantPreferences();
             return;
@@ -985,18 +939,6 @@ void Workspace::readGlobalGUIState()
                         }
                   }
             }
-      }
-
-//---------------------------------------------------------
-//   isBuiltInWorkspace
-//---------------------------------------------------------
-
-bool Workspace::isBuiltInWorkspace()
-      {
-      if (_path == "Basic" || _path == "Advanced")
-            return true;
-      else
-            return false;
       }
 
 //---------------------------------------------------------

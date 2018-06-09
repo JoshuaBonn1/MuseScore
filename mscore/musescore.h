@@ -106,9 +106,6 @@ enum class SelState : char;
 enum class IconType : signed char;
 enum class MagIdx : char;
 
-
-enum class PaletteType { MASTER, ADVANCED, BASIC };
-
 extern QString mscoreGlobalShare;
 static const int PROJECT_LIST_LEN = 6;
 extern const char* voiceActions[];
@@ -226,8 +223,6 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       UpdateChecker* ucheck;
 
       static const std::list<const char*> _allNoteInputMenuEntries;
-      static const std::list<const char*> _basicNoteInputMenuEntries;
-      static const std::list<const char*> _advancedNoteInputMenuEntries;
       std::list<const char*> _noteInputMenuEntries { _allNoteInputMenuEntries };
 
       static const std::list<const char*> _allFileOperationEntries;
@@ -617,8 +612,7 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       bool eventFilter(QObject *, QEvent *);
       void setMidiRecordId(int id) { _midiRecordId = id; }
       int midiRecordId() const { return _midiRecordId; }
-      void setAdvancedPalette();
-      void setBasicPalette();
+      void setDefaultPalette();
       void scorePageLayoutChanged();
       bool processMidiRemote(MidiRemoteType type, int data, int value);
       ScoreTab* getTab1() const { return tab1; }
@@ -704,30 +698,30 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       void allowShowMidiPanel(const QString &file);
       void setMidiReopenInProgress(const QString &file);
 
-      static Palette* newTempoPalette(PaletteType);
+      static Palette* newTempoPalette(bool defaultPalette = false);
       static Palette* newTextPalette();
       static Palette* newTimePalette();
       static Palette* newRepeatsPalette();
       static Palette* newBreaksPalette();
-      static Palette* newBeamPalette(PaletteType);
-      static Palette* newDynamicsPalette(PaletteType);
+      static Palette* newBeamPalette();
+      static Palette* newDynamicsPalette(bool defaultPalette = false);
       static Palette* newFramePalette();
       static Palette* newFingeringPalette();
       static Palette* newTremoloPalette();
       static Palette* newNoteHeadsPalette();
-      static Palette* newArticulationsPalette(PaletteType);
+      static Palette* newArticulationsPalette();
       static Palette* newOrnamentsPalette();
       static Palette* newAccordionPalette();
       static Palette* newBracketsPalette();
       static Palette* newBreathPalette();
       static Palette* newArpeggioPalette();
-      static Palette* newClefsPalette(PaletteType);
-      static Palette* newGraceNotePalette(PaletteType);
+      static Palette* newClefsPalette(bool defaultPalette = false);
+      static Palette* newGraceNotePalette();
       static Palette* newBagpipeEmbellishmentPalette();
-      static Palette* newKeySigPalette(PaletteType);
-      static Palette* newAccidentalsPalette(PaletteType);
-      static Palette* newBarLinePalette(PaletteType);
-      static Palette* newLinesPalette(PaletteType);
+      static Palette* newKeySigPalette();
+      static Palette* newAccidentalsPalette(bool defaultPalette = false);
+      static Palette* newBarLinePalette();
+      static Palette* newLinesPalette();
       static Palette* newFretboardDiagramPalette();
 
       WorkspaceDialog* workspaceDialog() { return _workspaceDialog; }
@@ -763,10 +757,11 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       void showMixer(bool);
 
       qreal physicalDotsPerInch() const                              { return _physicalDotsPerInch; }
+
       static const std::list<const char*>& allNoteInputMenuEntries() { return _allNoteInputMenuEntries; }
-      static const std::list<const char*>& basicNoteInputMenuEntries() { return _basicNoteInputMenuEntries; }
-      static const std::list<const char*>& advancedNoteInputMenuEntries() { return _advancedNoteInputMenuEntries; }
       std::list<const char*>* noteInputMenuEntries()                 { return &_noteInputMenuEntries; }
+      void setNoteInputMenuEntries(std::list<const char*> l)         { _noteInputMenuEntries = l; }
+      void populateNoteInputMenu();
 
       static const std::list<const char*>& allFileOperationEntries() { return _allFileOperationEntries; }
       std::list<const char*>* fileOperationEntries()                 { return &_fileOperationEntries; }
@@ -778,8 +773,6 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       void setPlaybackControlEntries(std::list<const char*> l)       { _playbackControlEntries = l; }
       void populatePlaybackControls();
 
-      void setNoteInputMenuEntries(std::list<const char*> l)         { _noteInputMenuEntries = l; }
-      void populateNoteInputMenu();
       static void updateUiStyleAndTheme();
 
       void showError();

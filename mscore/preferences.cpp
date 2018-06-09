@@ -211,7 +211,6 @@ QVariant Preferences::get(const QString key) const
       else if (_inMemorySettings.contains(key)) // if there exists a temporary value stored "in memory" return this value
             return pref;
       else if (Workspace::currentWorkspace &&
-               !Workspace::currentWorkspace->isBuiltInWorkspace() &&
                Workspace::currentWorkspace->savePrefs &&
                local_pref != Workspace::localPreferences.end())
             return local_pref->second;
@@ -226,7 +225,6 @@ void Preferences::set(const QString key, QVariant value, bool temporary)
       if (_storeInMemoryOnly || temporary)
             _inMemorySettings[key] = value;
       else if (Workspace::currentWorkspace &&
-               !Workspace::currentWorkspace->isBuiltInWorkspace() &&
                Workspace::currentWorkspace->savePrefs &&
                local_pref != Workspace::localPreferences.end())
             Workspace::localPreferences[key.toStdString()] = value;

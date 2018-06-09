@@ -36,8 +36,6 @@ class Workspace : public QObject {
       Q_OBJECT
 
       static QList<Workspace*> _workspaces;
-      static Workspace _advancedWorkspace;
-      static Workspace _basicWorkspace;
       static QList<QPair<QAction*, QString>> actionToStringList;
       static QList<QPair<QMenu*, QString>> menuToStringList;
 
@@ -56,6 +54,10 @@ class Workspace : public QObject {
       QString _path;
       bool _dirty;
       bool _readOnly;
+
+      void readGlobalToolBar();
+      void readGlobalMenuBar();
+      void readGlobalGUIState();
 
    public slots:
       void setDirty(bool val = true) { _dirty = val;    }
@@ -78,7 +80,6 @@ class Workspace : public QObject {
       void read();
       bool readOnly() const          { return _readOnly; }
       void setReadOnly(bool val)     { _readOnly = val;  }
-      bool isBuiltInWorkspace();
 
       static void initWorkspace();
       static Workspace* currentWorkspace;
@@ -97,11 +98,8 @@ class Workspace : public QObject {
       static std::unordered_map<std::string, QVariant> localPreferences;
 
       static void writeGlobalMenuBar(QMenuBar* mb);
-      void readGlobalMenuBar();
       static void writeGlobalToolBar();
-      void readGlobalToolBar();
       static void writeGlobalGUIState();
-      void readGlobalGUIState();
       };
 }
 #endif

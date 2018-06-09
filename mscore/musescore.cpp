@@ -208,63 +208,6 @@ const std::list<const char*> MuseScore::_allNoteInputMenuEntries {
             "voice-4"
             };
 
-const std::list<const char*> MuseScore::_advancedNoteInputMenuEntries {
-            "note-input",
-            "pad-note-128",
-            "pad-note-64",
-            "pad-note-32",
-            "pad-note-16",
-            "pad-note-8",
-            "pad-note-4",
-            "pad-note-2",
-            "pad-note-1",
-            "note-breve",
-            "note-longa",
-            "pad-dot",
-            "pad-dotdot",
-            "pad-dot3",
-            "pad-dot4",
-            "tie",
-            "",
-            "pad-rest",
-            "",
-            "sharp2",
-            "sharp",
-            "nat",
-            "flat",
-            "flat2",
-            "flip",
-            "",
-            "voice-1",
-            "voice-2",
-            "voice-3",
-            "voice-4"
-            };
-
-const std::list<const char*> MuseScore::_basicNoteInputMenuEntries {
-            "note-input",
-            "pad-note-32",
-            "pad-note-16",
-            "pad-note-8",
-            "pad-note-4",
-            "pad-note-2",
-            "pad-note-1",
-            "pad-dot",
-            "tie",
-            "",
-            "pad-rest",
-            "",
-            "sharp",
-            "nat",
-            "flat",
-            "flip",
-            "",
-            "voice-1",
-            "voice-2",
-            "voice-3",
-            "voice-4"
-            };
-
 const std::list<const char*> MuseScore::_allFileOperationEntries {
             "file-new",
             "file-open",
