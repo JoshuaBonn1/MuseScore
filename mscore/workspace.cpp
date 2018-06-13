@@ -202,8 +202,10 @@ void MuseScore::changeWorkspace(Workspace* p, bool first)
       Workspace::currentWorkspace->save();
       p->read();
       Workspace::currentWorkspace = p;
-      if (!first)
+      if (!first) {
+            mscore->setIconSize(QSize(preferences.getInt(PREF_UI_THEME_ICONWIDTH) * guiScaling, preferences.getInt(PREF_UI_THEME_ICONHEIGHT) * guiScaling));
             preferencesChanged(true);
+            }
       }
 
 //---------------------------------------------------------
