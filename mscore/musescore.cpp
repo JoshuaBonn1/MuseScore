@@ -1429,7 +1429,7 @@ MuseScore::MuseScore()
       Workspace::writeGlobalMenuBar(mb);
 
       if (!MScore::noGui) {
-            retranslate(true);
+            retranslate();
             //accessibility for menus
             for (QMenu* menu : mb->findChildren<QMenu*>()) {
                   menu->setAccessibleName(menu->objectName());
@@ -1496,7 +1496,7 @@ void MuseScore::showError()
 //   retranslate
 //---------------------------------------------------------
 
-void MuseScore::retranslate(bool firstStart)
+void MuseScore::retranslate()
       {
       _positionLabel->setToolTip(tr("Measure:Beat:Tick"));
 
@@ -1546,9 +1546,7 @@ void MuseScore::retranslate(bool firstStart)
       showMidiImportButton->setText(tr("Show MIDI import panel"));
 
       Shortcut::retranslate();
-      if (!firstStart && Workspace::currentWorkspace->readOnly()) {
-            changeWorkspace(Workspace::currentWorkspace);
-            }
+      Workspace::retranslate();
       }
 
 //---------------------------------------------------------
@@ -5983,6 +5981,9 @@ void MuseScore::updateUiStyleAndTheme()
       css.replace("$voice4-bgcolor", MScore::selectColor[3].name(QColor::HexRgb));
       qApp->setStyleSheet(css);
 
+      QString style = QString("*, QSpinBox { font: %1px \"%2\" }").arg(QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE)), preferences.getString(PREF_UI_THEME_FONTFAMILY));
+      qApp->setStyleSheet(style);
+
       genIcons();
       Shortcut::refreshIcons();
       }
@@ -6426,6 +6427,8 @@ int main(int argc, char* av[])
                   preferences.setPreference(PREF_APP_KEYBOARDLAYOUT, sw->keyboardLayout());
                   preferences.setPreference(PREF_UI_APP_LANGUAGE, sw->language());
                   setMscoreLocale(sw->language());
+                  Workspace::writeGlobalToolBar();
+                  Workspace::writeGlobalGUIState();
                   for (auto ws : Workspace::workspaces()) {
                         if (ws->name().compare(sw->workspace()) == 0) {
                               mscore->changeWorkspace(ws, true);
@@ -6438,8 +6441,6 @@ int main(int argc, char* av[])
             QString keyboardLayout = preferences.getString(PREF_APP_KEYBOARDLAYOUT);
             StartupWizard::autoSelectShortcuts(keyboardLayout);
             }
-      Workspace::writeGlobalToolBar();
-      Workspace::writeGlobalGUIState();
 
       QApplication::instance()->installEventFilter(mscore);
 

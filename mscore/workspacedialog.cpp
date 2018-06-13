@@ -15,6 +15,8 @@
 #include "preferences.h"
 #include "musescore.h"
 #include "palettebox.h"
+#include <QFontDatabase>
+#include <QTreeWidget>
 
 namespace Ms {
 
@@ -101,5 +103,12 @@ void WorkspaceDialog::accepted()
       PaletteBox* paletteBox = mscore->getPaletteBox();
       paletteBox->updateWorkspaces();
       close();
+      }
+
+void WorkspaceDialog::changeEvent(QEvent *event)
+      {
+      QWidget::changeEvent(event);
+      if (event->type() == QEvent::LanguageChange)
+            retranslate();
       }
 }

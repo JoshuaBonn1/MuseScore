@@ -180,6 +180,8 @@ enum class MusicxmlExportBreaks : char {
 #define PREF_UI_SCORE_VOICE4_COLOR                          "ui/score/voice4/color"
 #define PREF_UI_THEME_ICONHEIGHT                            "ui/theme/iconHeight"
 #define PREF_UI_THEME_ICONWIDTH                             "ui/theme/iconWidth"
+#define PREF_UI_THEME_FONTFAMILY                            "ui/theme/fontFamily"
+#define PREF_UI_THEME_FONTSIZE                              "ui/theme/fontSize"
 
 
 class PreferenceVisitor;

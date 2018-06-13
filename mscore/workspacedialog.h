@@ -28,6 +28,11 @@ class WorkspaceDialog : public QDialog, Ui::WorkspaceDialog
 
    private slots:
       void accepted();
+
+   protected:
+      virtual void changeEvent(QEvent* event);
+      void retranslate()  { retranslateUi(this); }
+
       };
 
 }

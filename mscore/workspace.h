@@ -54,6 +54,7 @@ class Workspace : public QObject {
       QString _path;
       bool _dirty;
       bool _readOnly;
+      bool _translate;
 
       void readGlobalToolBar();
       void readGlobalMenuBar();
@@ -78,8 +79,10 @@ class Workspace : public QObject {
       void write();
       void read(XmlReader&);
       void read();
-      bool readOnly() const          { return _readOnly; }
-      void setReadOnly(bool val)     { _readOnly = val;  }
+      bool readOnly() const          { return _readOnly;  }
+      void setReadOnly(bool val)     { _readOnly = val;   }
+      bool translate() const         { return _translate; }
+      void setTranslate(bool val)    { _translate = val;  }
 
       static void initWorkspace();
       static Workspace* currentWorkspace;
@@ -100,6 +103,8 @@ class Workspace : public QObject {
       static void writeGlobalMenuBar(QMenuBar* mb);
       static void writeGlobalToolBar();
       static void writeGlobalGUIState();
+
+      static void retranslate(QList<Workspace*>* workspacesList = 0);
       };
 }
 #endif

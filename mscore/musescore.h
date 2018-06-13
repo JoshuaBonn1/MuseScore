@@ -415,7 +415,7 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       virtual void dropEvent(QDropEvent*);
       virtual void changeEvent(QEvent *e);
 
-      void retranslate(bool firstStart = false);
+      void retranslate();
 
       void playVisible(bool flag);
       void launchBrowser(const QString whereTo);

@@ -171,7 +171,9 @@ void Preferences::init(bool storeInMemoryOnly)
             {PREF_UI_SCORE_VOICE3_COLOR,                           new ColorPreference(QColor("#c04400"))},    // orange
             {PREF_UI_SCORE_VOICE4_COLOR,                           new ColorPreference(QColor("#70167a"))},    // purple
             {PREF_UI_THEME_ICONWIDTH,                              new IntPreference(28, false)},
-            {PREF_UI_THEME_ICONHEIGHT,                             new IntPreference(24, false)}
+            {PREF_UI_THEME_ICONHEIGHT,                             new IntPreference(24, false)},
+            {PREF_UI_THEME_FONTFAMILY,                             new StringPreference(QApplication::font().family(), false)},
+            {PREF_UI_THEME_FONTSIZE,                               new IntPreference(QApplication::font().pixelSize(), false)}
       });
 
       _initialized = true;
@@ -453,6 +455,8 @@ std::unordered_map<std::string, QVariant> Preferences::getWorkspaceRelevantPrefe
       ui_preferences_vector.push_back(PREF_UI_SCORE_VOICE4_COLOR);
       ui_preferences_vector.push_back(PREF_UI_THEME_ICONWIDTH);
       ui_preferences_vector.push_back(PREF_UI_THEME_ICONHEIGHT);
+      ui_preferences_vector.push_back(PREF_UI_THEME_FONTFAMILY);
+      ui_preferences_vector.push_back(PREF_UI_THEME_FONTSIZE);
       for (auto pref : ui_preferences_vector)
             ui_preferences.insert({{pref, preference(QString::fromStdString(pref))}});
       return ui_preferences;

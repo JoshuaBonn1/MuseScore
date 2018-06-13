@@ -85,6 +85,7 @@ void MuseScore::showWorkspaceMenu()
       menuWorkspaces->addAction(a);
 
       a = new QAction(tr("Edit"), this);
+      a->setDisabled(Workspace::currentWorkspace->readOnly());
       connect(a, SIGNAL(triggered()), SLOT(editWorkspace()));
       menuWorkspaces->addAction(a);
 
@@ -969,6 +970,7 @@ QList<Workspace*>& Workspace::workspaces()
 
             for (const QString& s : path) {
                   QDir dir(s);
+                  bool translate = (s == mscoreGlobalShare + "workspaces");
                   QStringList pl = dir.entryList(nameFilters, QDir::Files, QDir::Name);
 
                   foreach (const QString& entry, pl) {
@@ -985,13 +987,30 @@ QList<Workspace*>& Workspace::workspaces()
                               p = new Workspace;
                         p->setPath(s + "/" + entry);
                         p->setName(name);
+                        p->setTranslate(translate);
                         p->setReadOnly(!fi.isWritable());
                         _workspaces.append(p);
                         }
                   }
+            retranslate(&_workspaces);
             workspacesRead = true;
             }
+
       return _workspaces;
+      }
+
+//---------------------------------------------------------
+//   retranslate
+//---------------------------------------------------------
+
+void Workspace::retranslate(QList<Workspace*>* workspacesList)
+      {
+      if (!workspacesList)
+            workspacesList = &workspaces();
+      for (auto w : *workspacesList) {
+            if (w->translate())
+                  w->setName(tr(w->name().toLatin1().data()));
+            }
       }
 
 //---------------------------------------------------------

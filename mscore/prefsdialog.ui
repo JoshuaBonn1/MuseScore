@@ -657,23 +657,6 @@
           <string>Theme</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_9">
-          <item row="0" column="0" colspan="2">
-           <widget class="QComboBox" name="styleName">
-            <property name="accessibleName">
-             <string>Select style</string>
-            </property>
-            <item>
-             <property name="text">
-              <string>Dark</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Light</string>
-             </property>
-            </item>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QSpinBox" name="iconWidth">
             <property name="accessibleName">
@@ -719,6 +702,29 @@
              <number>20</number>
             </property>
            </widget>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QComboBox" name="styleName">
+            <property name="accessibleName">
+             <string>Select style</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>Dark</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Light</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QFontComboBox" name="fontFamily"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="fontSize"/>
           </item>
          </layout>
         </widget>
