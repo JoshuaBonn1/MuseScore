@@ -173,7 +173,7 @@ void Preferences::init(bool storeInMemoryOnly)
             {PREF_UI_THEME_ICONWIDTH,                              new IntPreference(28, false)},
             {PREF_UI_THEME_ICONHEIGHT,                             new IntPreference(24, false)},
             {PREF_UI_THEME_FONTFAMILY,                             new StringPreference(QApplication::font().family(), false)},
-            {PREF_UI_THEME_FONTSIZE,                               new IntPreference(QApplication::font().pixelSize(), false)}
+            {PREF_UI_THEME_FONTSIZE,                               new IntPreference(QApplication::font().pointSize(), false)}
       });
 
       _initialized = true;

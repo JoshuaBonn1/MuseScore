@@ -1105,7 +1105,7 @@ void PreferenceDialog::apply()
       genIcons();
 
       mscore->setIconSize(QSize(preferences.getInt(PREF_UI_THEME_ICONWIDTH) * guiScaling, preferences.getInt(PREF_UI_THEME_ICONHEIGHT) * guiScaling));
-      QString style = QString("*, QSpinBox { font: %1px \"%2\" }").arg(QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE)), preferences.getString(PREF_UI_THEME_FONTFAMILY));
+      QString style = QString("*, QSpinBox { font: %1pt \"%2\" }").arg(QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE)), preferences.getString(PREF_UI_THEME_FONTFAMILY));
       qApp->setStyleSheet(style);
 
       emit preferencesChanged();
