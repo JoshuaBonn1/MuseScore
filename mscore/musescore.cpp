@@ -5981,7 +5981,9 @@ void MuseScore::updateUiStyleAndTheme()
       css.replace("$voice4-bgcolor", MScore::selectColor[3].name(QColor::HexRgb));
       qApp->setStyleSheet(css);
 
-      QString style = QString("*, QSpinBox { font: %1pt \"%2\" }").arg(QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE)), preferences.getString(PREF_UI_THEME_FONTFAMILY));
+      QString style = QString("*, QSpinBox { font: %1pt \"%2\" } ")
+                  .arg(QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE)), preferences.getString(PREF_UI_THEME_FONTFAMILY))
+                  + qApp->styleSheet();
       qApp->setStyleSheet(style);
 
       genIcons();
