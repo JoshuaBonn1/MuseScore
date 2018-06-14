@@ -1159,8 +1159,11 @@ Palette* MuseScore::newLinesPalette()
 void MuseScore::showPalette(bool visible)
       {
       QAction* a = getAction("toggle-palette");
-      if (paletteBox == 0)
+      if (paletteBox == 0) {
             Workspace::currentWorkspace->read();
+            preferencesChanged();
+            updateIcons();
+            }
       if (paletteBox)   // read failed?
             paletteBox->setVisible(visible);
       a->setChecked(visible);
