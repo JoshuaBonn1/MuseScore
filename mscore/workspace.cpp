@@ -112,6 +112,7 @@ void MuseScore::createNewWorkspace()
       _workspaceDialog->editMode = false;
 
       _workspaceDialog->display();
+      updateIcons();
       }
 
 //---------------------------------------------------------
@@ -128,6 +129,7 @@ void MuseScore::editWorkspace()
       _workspaceDialog->editMode = true;
 
       _workspaceDialog->display();
+      updateIcons();
       }
 
 
@@ -173,6 +175,7 @@ void MuseScore::deleteWorkspace()
       changeWorkspace(Workspace::currentWorkspace);
       paletteBox = mscore->getPaletteBox();
       paletteBox->updateWorkspaces();
+      updateIcons();
       }
 
 //---------------------------------------------------------
@@ -187,6 +190,7 @@ void MuseScore::changeWorkspace(QAction* a)
                   preferences.setPreference(PREF_APP_WORKSPACE, Workspace::currentWorkspace->name());
                   PaletteBox* paletteBox = mscore->getPaletteBox();
                   paletteBox->updateWorkspaces();
+                  updateIcons();
                   return;
                   }
             }
@@ -203,8 +207,23 @@ void MuseScore::changeWorkspace(Workspace* p, bool first)
       p->read();
       Workspace::currentWorkspace = p;
       if (!first) {
-            mscore->setIconSize(QSize(preferences.getInt(PREF_UI_THEME_ICONWIDTH) * guiScaling, preferences.getInt(PREF_UI_THEME_ICONHEIGHT) * guiScaling));
+            updateIcons();
             preferencesChanged(true);
+            }
+      }
+
+//---------------------------------------------------------
+//   updateIcons
+//---------------------------------------------------------
+
+void MuseScore::updateIcons()
+      {
+      mscore->setIconSize(QSize(preferences.getInt(PREF_UI_THEME_ICONWIDTH) * guiScaling, preferences.getInt(PREF_UI_THEME_ICONHEIGHT) * guiScaling));
+      for (QAction* a : fileTools->actions()) {
+            QWidget* widget = fileTools->widgetForAction(a);
+            QString className = widget->metaObject()->className();
+            if (className != "Ms::AccessibleToolButton" || className != "QToolBarSeparator")
+                  widget->setFixedHeight(preferences.getInt(PREF_UI_THEME_ICONHEIGHT) + 8);  // hack
             }
       }
 

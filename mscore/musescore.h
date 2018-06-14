@@ -725,6 +725,7 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       static Palette* newFretboardDiagramPalette();
 
       WorkspaceDialog* workspaceDialog() { return _workspaceDialog; }
+      void updateIcons();
 
       Inspector* inspector()           { return _inspector; }
       PluginCreator* pluginCreator()   { return _pluginCreator; }
