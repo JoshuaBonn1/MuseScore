@@ -1013,6 +1013,13 @@ QList<Workspace*>& Workspace::workspaces()
                         _workspaces.append(p);
                         }
                   }
+            // hack
+            for (int i = 0; i < _workspaces.size(); i++) {
+                  if (_workspaces[i]->name() == "Basic") {
+                        _workspaces.move(i, 0);
+                        break;
+                        }
+                  }
             retranslate(&_workspaces);
             workspacesRead = true;
             }
