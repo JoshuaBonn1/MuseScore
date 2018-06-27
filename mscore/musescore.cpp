@@ -6737,6 +6737,7 @@ int main(int argc, char* av[])
                               mscore->getPaletteBox()->updateWorkspaces();
                               }
                         }
+                  preferences.setPreference(PREF_UI_APP_STARTUP_SHOWTOURS, sw->showTours());
                   delete sw;
                   }
             QString keyboardLayout = preferences.getString(PREF_APP_KEYBOARDLAYOUT);
