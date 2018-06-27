@@ -1192,6 +1192,7 @@ MuseScore::MuseScore()
 
       entryTools = addToolBar("");
       entryTools->setObjectName("entry-tools");
+      qDebug() << connect(entryTools, SIGNAL(actionTriggered(QAction*)), _tourHandler, SLOT(startTour(QAction*)));
 
       populateNoteInputMenu();
 
@@ -3845,6 +3846,8 @@ void MuseScore::writeSettings()
             drumrollEditor->writeSettings();
       if (startcenter)
             startcenter->writeSettings();
+
+      _tourHandler->writeCompletedTours();
       }
 
 //---------------------------------------------------------

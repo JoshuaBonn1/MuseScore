@@ -19,9 +19,14 @@ class TourHandler : public QObject
    public:
       TourHandler();
       void loadTours();
+      void readCompletedTours();
+      void writeCompletedTours();
 
       bool eventFilter(QObject *obj, QEvent* event);
       static void startTour(QString tourName);
+
+   public slots:
+      void startTour(QAction* action);
       };
 
 }

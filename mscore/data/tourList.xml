@@ -13,4 +13,10 @@
     <Message>There are different elements.</Message>
     <Message>Describe how to use and edit them and stuff.</Message>
     </Tour>
+  <Tour name="note-input">
+    <Message>Here is the note input toolbar.</Message>
+    <Message>To begin adding notes, click the note input button.</Message>
+    <Message>To add rests, select the rests button.</Message>
+    <Message>If you want to change voices, click the numbers.</Message>
+    </Tour>
   </TourCollection>

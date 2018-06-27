@@ -38,7 +38,7 @@ void TourHandler::loadTours()
                   }
             }
 
-      tourFile->close();
+      readCompletedTours();
       }
 
 //---------------------------------------------------------
@@ -60,6 +60,36 @@ void TourHandler::loadTour(XmlReader& tourXml)
       }
 
 //---------------------------------------------------------
+//   readCompletedTours
+//---------------------------------------------------------
+
+void TourHandler::readCompletedTours()
+      {
+      QFile completedToursFile(dataPath + "/tours/completedTours.txt");
+      if (!completedToursFile.open(QIODevice::ReadOnly))
+            return;
+
+      QDataStream in(&completedToursFile);
+      in >> completedTours;
+      }
+
+//---------------------------------------------------------
+//   writeCompletedTours
+//---------------------------------------------------------
+
+void TourHandler::writeCompletedTours()
+      {
+      QDir dir;
+      dir.mkpath(dataPath);
+      QString path = dataPath + "/tours";
+      dir.mkpath(path);
+      QFile completedToursFile(path + "/completedTours.txt");
+      completedToursFile.open(QIODevice::WriteOnly);
+      QDataStream out(&completedToursFile);
+      out << completedTours;
+      }
+
+//---------------------------------------------------------
 //   eventFilter
 //---------------------------------------------------------
 
@@ -76,7 +106,7 @@ bool TourHandler::eventFilter(QObject *obj, QEvent* event)
       }
 
 //---------------------------------------------------------
-//   actionFilter
+//   startTour
 //---------------------------------------------------------
 
 void TourHandler::startTour(QString tourName)
@@ -90,6 +120,12 @@ void TourHandler::startTour(QString tourName)
             }
       else
             qDebug() << tourName << " does not have a tour.";
+      }
+
+void TourHandler::startTour(QAction *action)
+      {
+      qDebug() << action;
+      qDebug() << sender();
       }
 
 //---------------------------------------------------------
