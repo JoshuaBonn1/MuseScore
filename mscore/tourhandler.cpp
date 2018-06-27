@@ -1,5 +1,6 @@
 #include "tourhandler.h"
 #include "musescore.h"
+#include "preferences.h"
 
 namespace Ms {
 
@@ -80,6 +81,8 @@ bool TourHandler::eventFilter(QObject *obj, QEvent* event)
 
 void TourHandler::startTour(QString tourName)
       {
+      if (!preferences.getBool(PREF_UI_APP_STARTUP_SHOWTOURS))
+            return;
       if (allTours.contains(tourName) && !completedTours.contains(tourName)) {
             Tour tour = allTours.value(tourName);
             displayTour(tour);

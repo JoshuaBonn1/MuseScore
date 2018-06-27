@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>712</width>
-    <height>538</height>
+    <width>859</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -229,6 +229,13 @@
             </property>
             <property name="text">
              <string>Show navigator</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QCheckBox" name="showTours">
+            <property name="text">
+             <string>Show tours</string>
             </property>
            </widget>
           </item>
