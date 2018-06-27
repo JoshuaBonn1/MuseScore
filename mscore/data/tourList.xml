@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TourCollection>
+  <Tour name="timeline-tour">
+    <Message>This is a timeline.</Message>
+    <Message>It does stuff, I guess.</Message>
+    </Tour>
+  <Tour name="add-slur">
+    <Message>You are adding a slur.</Message>
+    <Message>If the notes are the same, you might want to use a tie.</Message>
+    </Tour>
+  <Tour name="show-palette">
+    <Message>Here is a palette.</Message>
+    <Message>There are different elements.</Message>
+    <Message>Describe how to use and edit them and stuff.</Message>
+    </Tour>
+  </TourCollection>

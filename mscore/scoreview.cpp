@@ -30,6 +30,7 @@
 #include "textpalette.h"
 #include "texttools.h"
 #include "fotomode.h"
+#include "tourhandler.h"
 
 #include "inspector/inspector.h"
 
@@ -1816,8 +1817,10 @@ void ScoreView::cmd(const char* s)
             else if (fotoMode())
                   changeState(ViewState::NORMAL);
             }
-      else if (cmd == "add-slur")
+      else if (cmd == "add-slur") {
+            TourHandler::startTour("add-slur");
             addSlur();
+            }
       else if (cmd == "add-hairpin")
             cmdAddHairpin(HairpinType::CRESC_HAIRPIN);
       else if (cmd == "add-hairpin-reverse")

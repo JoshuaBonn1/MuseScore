@@ -85,6 +85,7 @@
 #include "resourceManager.h"
 #include "scoreaccessibility.h"
 #include "startupWizard.h"
+#include "tourhandler.h"
 
 #include "libmscore/mscore.h"
 #include "libmscore/system.h"
@@ -908,6 +909,10 @@ bool MuseScore::uninstallExtension(QString extensionId)
 MuseScore::MuseScore()
    : QMainWindow()
       {
+      _tourHandler = new TourHandler();
+      QApplication::instance()->installEventFilter(_tourHandler);
+      _tourHandler->loadTours();
+
       QScreen* screen = QGuiApplication::primaryScreen();
       if (userDPI == 0.0) {
 #if defined(Q_OS_WIN)

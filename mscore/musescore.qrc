@@ -162,5 +162,6 @@
         <file>data/icons/clef-bass.svg</file>
         <file>data/solid_note_head.dat</file>
         <file>data/icons/edit-swap.svg</file>
+        <file>data/tourList.xml</file>
     </qresource>
 </RCC>
