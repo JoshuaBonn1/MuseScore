@@ -613,6 +613,7 @@ void MuseScore::populateNoteInputMenu()
                   else
                         w = new AccessibleToolButton(entryTools, a);
                   entryTools->addWidget(w);
+                  _tourHandler->attachTour(w, QEvent::MouseButtonPress, "note-input");
                   }
             }
       }
@@ -910,7 +911,7 @@ MuseScore::MuseScore()
    : QMainWindow()
       {
       _tourHandler = new TourHandler();
-      QApplication::instance()->installEventFilter(_tourHandler);
+      qApp->installEventFilter(_tourHandler);
       _tourHandler->loadTours();
 
       QScreen* screen = QGuiApplication::primaryScreen();
@@ -1192,7 +1193,6 @@ MuseScore::MuseScore()
 
       entryTools = addToolBar("");
       entryTools->setObjectName("entry-tools");
-      qDebug() << connect(entryTools, SIGNAL(actionTriggered(QAction*)), _tourHandler, SLOT(startTour(QAction*)));
 
       populateNoteInputMenu();
 

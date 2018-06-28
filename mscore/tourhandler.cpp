@@ -14,6 +14,7 @@ QHash<QString, bool> TourHandler::completedTours;
 TourHandler::TourHandler()
       : QObject(0)
       {
+      eventHandler = new QMap<QObject*, QMap<QEvent::Type, QString>*>;
       }
 
 //---------------------------------------------------------
@@ -93,16 +94,23 @@ void TourHandler::writeCompletedTours()
 //   eventFilter
 //---------------------------------------------------------
 
-bool TourHandler::eventFilter(QObject *obj, QEvent* event)
+bool TourHandler::eventFilter(QObject* obj, QEvent* event)
       {
-      switch(event->type()) {
-            case QEvent::MouseButtonPress:
-                  qDebug() << obj << event;
-                  return false;
-            default:
-                  return false;
-            }
+      if (eventHandler->contains(obj) && eventHandler->value(obj)->contains(event->type()))
+            startTour(eventHandler->value(obj)->value(event->type()));
       return false;
+      }
+
+//---------------------------------------------------------
+//   attachTour
+//---------------------------------------------------------
+
+void TourHandler::attachTour(QObject* obj, QEvent::Type eventType, QString tourName)
+      {
+      obj->installEventFilter(this);
+      if (!eventHandler->contains(obj))
+            eventHandler->insert(obj, new QMap<QEvent::Type, QString>);
+      eventHandler->value(obj)->insert(eventType, tourName);
       }
 
 //---------------------------------------------------------

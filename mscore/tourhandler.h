@@ -10,6 +10,8 @@ class TourHandler : public QObject
       {
       Q_OBJECT
 
+      QMap<QObject*, QMap<QEvent::Type, QString>*>* eventHandler;
+
       void loadTour(XmlReader& tourXml);
 
       static void displayTour(Tour tour);
@@ -24,6 +26,7 @@ class TourHandler : public QObject
 
       bool eventFilter(QObject *obj, QEvent* event);
       static void startTour(QString tourName);
+      void attachTour(QObject* obj, QEvent::Type eventType, QString tourName);
 
    public slots:
       void startTour(QAction* action);
