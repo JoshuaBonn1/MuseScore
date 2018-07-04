@@ -910,7 +910,7 @@ bool MuseScore::uninstallExtension(QString extensionId)
 MuseScore::MuseScore()
    : QMainWindow()
       {
-      _tourHandler = new TourHandler();
+      _tourHandler = new TourHandler(this);
       qApp->installEventFilter(_tourHandler);
       _tourHandler->loadTours();
 
