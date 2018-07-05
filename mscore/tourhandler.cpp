@@ -5,7 +5,6 @@
 namespace Ms {
 
 QHash<QString, Tour*> TourHandler::allTours;
-//QHash<QString, bool> TourHandler::completedTours;
 
 //---------------------------------------------------------
 //   TourHandler
@@ -95,8 +94,8 @@ void TourHandler::writeCompletedTours()
       QList<QString> completedTours;
 
       for (Tour* t : allTours.values())
-            if (t->isCompleted())
-                  completedTours.append(t->getTourName());
+            if (t->completed())
+                  completedTours.append(t->tourName());
 
       QDataStream out(&completedToursFile);
       out << completedTours;
@@ -126,6 +125,32 @@ void TourHandler::attachTour(QObject* obj, QEvent::Type eventType, QString tourN
       }
 
 //---------------------------------------------------------
+//   addWidgetToTour
+//---------------------------------------------------------
+
+void TourHandler::addWidgetToTour(QString tourName, QWidget* widget, QString widgetName)
+      {
+      if (allTours.contains(tourName)) {
+            Tour* tour = allTours.value(tourName);
+            tour->addNameAndWidget(widgetName, widget);
+            }
+      else
+            qDebug() << tourName << "does not have a tour.";
+      }
+
+//---------------------------------------------------------
+//   clearWidgetsFromTour
+//---------------------------------------------------------
+
+void TourHandler::clearWidgetsFromTour(QString tourName)
+      {
+      if (allTours.contains(tourName))
+            allTours.value(tourName)->clearWidgets();
+      else
+            qDebug() << tourName << "does not have a tour.";
+      }
+
+//---------------------------------------------------------
 //   startTour
 //---------------------------------------------------------
 
@@ -135,7 +160,7 @@ void TourHandler::startTour(QString tourName)
             return;
       if (allTours.contains(tourName)) {
             Tour* tour = allTours.value(tourName);
-            if (tour->isCompleted())
+            if (tour->completed())
                   return;
             displayTour(tour);
             tour->setCompleted(true);
@@ -150,10 +175,25 @@ void TourHandler::startTour(QString tourName)
 
 void TourHandler::displayTour(Tour* tour)
       {
-      QMessageBox mbox;
-      for (TourMessage tm : tour->getMessages()) {
+      QMessageBox mbox(mscore);
+      qDebug() << QApplication::palette();
+      for (TourMessage tm : tour->messages()) {
+            // Save the original styles
+            QList<QString> originalStyles;
+            for (QWidget* w : tour->getWidgetsByName(tm.widgetName)) {
+                  originalStyles.append(w->styleSheet());
+                  QString windowColor = QApplication::palette().color(QPalette::Window).name();
+                  QString highlightColor = QApplication::palette().color(QPalette::Highlight).name();
+                  w->setStyleSheet(w->styleSheet() + "background: qradialgradient(cx:0.5, cy:0.5, radius: 0.5,"
+                                   "fx:0.5, fy:0.5, stop:0 " + highlightColor + ", stop:1 " + windowColor + ");");
+                  }
+
             mbox.setText(tm.message);
             mbox.exec();
+
+            // Load the original styles
+            for (QWidget* w : tour->getWidgetsByName(tm.widgetName))
+                  w->setStyleSheet(originalStyles.takeFirst());
             }
       }
 

@@ -14,9 +14,11 @@
     <Message>Describe how to use and edit them and stuff.</Message>
     </Tour>
   <Tour name="note-input">
-    <Message>Here is the note input toolbar.</Message>
-    <Message>To begin adding notes, click the note input button.</Message>
-    <Message>To add rests, select the rests button.</Message>
-    <Message>If you want to change voices, click the numbers.</Message>
+    <Message widget="entry-tools">This is the note input toolbar</Message>
+    <Message widget="note-input-icon">To get started, click the note input icon. Or you can press "N".</Message>
+    <Message widget="duration-icon">You can select a duration to add by clicking one of these icons.</Message>
+    <Message widget="rest-icon">To enter rests, select this icon and a duration.</Message>
+    <Message widget="accidental-icon">Accidentals can be added to notes by selecting these icons.</Message>
+    <Message widget="voice-icon">To change voices, click these number icons.</Message>
     </Tour>
   </TourCollection>

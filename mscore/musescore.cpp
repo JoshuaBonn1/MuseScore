@@ -568,6 +568,8 @@ void MuseScore::preferencesChanged()
 void MuseScore::populateNoteInputMenu()
       {
       entryTools->clear();
+      TourHandler::clearWidgetsFromTour("note-input");
+      TourHandler::addWidgetToTour("note-input", entryTools, "entry-tools");
 
       for (const auto s : _noteInputMenuEntries) {
             if (!*s)
@@ -595,6 +597,7 @@ void MuseScore::populateNoteInputMenu()
                            getAction("note-input"),
                            noteEntryMethods,
                            this);
+                        TourHandler::addWidgetToTour("note-input", w, "note-input-icon");
                         }
                   else if (strncmp(s, "voice-", 6) == 0) {
                         AccessibleToolButton* tb = new AccessibleToolButton(this, a);
@@ -609,11 +612,26 @@ void MuseScore::populateNoteInputMenu()
                         a->setCheckable(true);
                         // tb->setDefaultAction(a);
                         w = tb;
+                        TourHandler::addWidgetToTour("note-input", w, "voice-icon");
                         }
-                  else
+                  else {
                         w = new AccessibleToolButton(entryTools, a);
+                        if (strncmp(s, "pad-note-", 9) == 0 ||
+                            strcmp(s, "note-breve") == 0 ||
+                            strcmp(s, "note-longa") == 0 ||
+                            strncmp(s, "pad-dot", 7) == 0)
+                              TourHandler::addWidgetToTour("note-input", w, "duration-icon");
+                        else if (strcmp(s, "pad-rest") == 0)
+                              TourHandler::addWidgetToTour("note-input", w, "rest-icon");
+                        else if (strcmp(s, "sharp2") == 0 ||
+                                 strcmp(s, "sharp") == 0 ||
+                                 strcmp(s, "nat") == 0 ||
+                                 strcmp(s, "flat") == 0 ||
+                                 strcmp(s, "flat2") == 0)
+                              TourHandler::addWidgetToTour("note-input", w, "accidental-icon");
+                        }
                   entryTools->addWidget(w);
-                  _tourHandler->attachTour(w, QEvent::MouseButtonPress, "note-input");
+                  _tourHandler->attachTour(w, QEvent::MouseButtonRelease, "note-input");
                   }
             }
       }

@@ -1,6 +1,5 @@
 #ifndef TOURHANDLER_H
 #define TOURHANDLER_H
-//#define Tour QList<QString>
 
 #include "libmscore/xml.h"
 
@@ -14,27 +13,28 @@ struct TourMessage {
 
 class Tour
       {
-      QList<TourMessage> messages;
-      QMap<QString, QWidget*> nameToWidget;
-      QString tourName;
-      bool completed = false;
+      QList<TourMessage> _messages;
+      QMultiMap<QString, QWidget*> nameToWidget;
+      QString _tourName;
+      bool _completed = false;
 
    public:
-      Tour(QString name)        { tourName = name; }
+      Tour(QString name) { _tourName = name; }
 
       void addMessage(QString m, QString w) { TourMessage message;
                                               message.init(m, w);
-                                              messages.append(message); }
-      QList<TourMessage> getMessages()      { return messages;          }
+                                              _messages.append(message); }
+      QList<TourMessage> messages()         { return _messages;          }
 
-      QWidget* getWidget(QString n)                { return nameToWidget.value(n); }
+      QList<QWidget*> getWidgetsByName(QString n)  { return nameToWidget.values(n); }
       void addNameAndWidget(QString n, QWidget* w) { nameToWidget.insert(n, w);    }
+      void clearWidgets()                          { nameToWidget.clear();         }
 
-      void setTourName(QString n)   { tourName = n;     }
-      QString getTourName()         { return tourName;  }
+      void setTourName(QString n)   { _tourName = n;     }
+      QString tourName()            { return _tourName;  }
 
-      void setCompleted(bool c)     { completed = c;    }
-      bool isCompleted()            { return completed; }
+      void setCompleted(bool c)     { _completed = c;    }
+      bool completed()              { return _completed; }
       };
 
 class TourHandler : public QObject
@@ -47,7 +47,6 @@ class TourHandler : public QObject
 
       static void displayTour(Tour* tour);
       static QHash<QString, Tour*> allTours;
-//      static QHash<QString, bool> completedTours;
 
    public:
       TourHandler(QObject* parent);
@@ -58,6 +57,9 @@ class TourHandler : public QObject
       bool eventFilter(QObject *obj, QEvent* event);
       static void startTour(QString tourName);
       void attachTour(QObject* obj, QEvent::Type eventType, QString tourName);
+
+      static void addWidgetToTour(QString tourName, QWidget* widget, QString widgetName);
+      static void clearWidgetsFromTour(QString tourName);
       };
 
 }

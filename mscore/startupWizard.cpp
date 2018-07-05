@@ -165,7 +165,9 @@ StartupWizardPage4::StartupWizardPage4(QWidget* parent)
       layout->addWidget(label);
       yesButton = new QRadioButton(tr("Yes"), this);
       noButton  = new QRadioButton(tr("No"), this);
-      QHBoxLayout* buttonLayout = new QHBoxLayout(this);
+
+      yesButton->setChecked(true);
+      QHBoxLayout* buttonLayout = new QHBoxLayout();
       buttonLayout->addWidget(yesButton);
       buttonLayout->addWidget(noButton);
       layout->addLayout(buttonLayout);
