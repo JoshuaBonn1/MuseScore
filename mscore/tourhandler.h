@@ -46,6 +46,7 @@ class TourHandler : public QObject
       void loadTour(XmlReader& tourXml);
 
       static void displayTour(Tour* tour);
+      static void positionMessage(QList<QWidget*> widgets, QMessageBox* mbox);
       static QHash<QString, Tour*> allTours;
 
    public:
