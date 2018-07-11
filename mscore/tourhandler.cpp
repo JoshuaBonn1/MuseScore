@@ -7,6 +7,80 @@ namespace Ms {
 QHash<QString, Tour*> TourHandler::allTours;
 
 //---------------------------------------------------------
+//   OverlayWidget
+//---------------------------------------------------------
+
+OverlayWidget::OverlayWidget(QList<QWidget*> widgetList, QWidget* parent)
+      : QWidget{parent}
+      {
+      widgets = widgetList;
+      newParent();
+      }
+
+//---------------------------------------------------------
+//   newParent
+//---------------------------------------------------------
+
+void OverlayWidget::newParent()
+      {
+      if (!parent())
+            return;
+      parent()->installEventFilter(this);
+      resize(qobject_cast<QWidget*>(parent())->size());
+      raise();
+      }
+
+//---------------------------------------------------------
+//   eventFilter
+//---------------------------------------------------------
+
+bool OverlayWidget::eventFilter(QObject* obj, QEvent* ev)
+      {
+      if (obj == parent()) {
+            if (ev->type() == QEvent::Resize)
+                  resize(static_cast<QResizeEvent*>(ev)->size());
+            else if (ev->type() == QEvent::ChildAdded)
+                  raise();
+            }
+      return QWidget::eventFilter(obj, ev);
+      }
+
+//---------------------------------------------------------
+//   event
+//---------------------------------------------------------
+
+bool OverlayWidget::event(QEvent* ev)
+      {
+      if (ev->type() == QEvent::ParentAboutToChange) {
+            if (parent()) parent()->removeEventFilter(this);
+            }
+      else if (ev->type() == QEvent::ParentChange)
+            newParent();
+      return QWidget::event(ev);
+      }
+
+//---------------------------------------------------------
+//   paintEvent
+//---------------------------------------------------------
+
+void OverlayWidget::paintEvent(QPaintEvent *)
+      {
+      QPainterPath painterPath = QPainterPath();
+      QPainter p(this);
+      QWidget* parentWindow = qobject_cast<QWidget*>(parent());
+
+      if (parentWindow)
+            painterPath.addRect(parentWindow->rect());
+
+      QPainterPath subPath = QPainterPath();
+      for (QWidget* w : widgets)
+            subPath.addRect(QRect(w->mapTo(parentWindow, QPoint(0, 0)), w->size()));
+      painterPath -= subPath;
+
+      p.fillPath(painterPath, QColor(100, 100, 100, 128));
+      }
+
+//---------------------------------------------------------
 //   TourHandler
 //---------------------------------------------------------
 
@@ -181,6 +255,7 @@ void TourHandler::positionMessage(QList<QWidget*> widgets, QMessageBox* mbox)
       QSize s = widgets.at(0)->frameSize();
       QPoint topLeft = widgets.at(0)->mapToGlobal(QPoint(0, 0));
       QPoint bottomRight = widgets.at(0)->mapToGlobal(QPoint(s.width(), s.height()));
+
       for (QWidget* w : widgets) {
             QSize size = w->frameSize();
             QPoint wTopLeft = w->mapToGlobal(QPoint(0, 0));
@@ -240,37 +315,24 @@ void TourHandler::positionMessage(QList<QWidget*> widgets, QMessageBox* mbox)
 
 void TourHandler::displayTour(Tour* tour)
       {
-//      QMessageBox mbox(mscore);
       for (TourMessage tm : tour->messages()) {
-            QMessageBox* mbox = new QMessageBox(mscore);
-            // Save the original styles
-            QList<QString> originalStyles;
-            // Used for message box placement
-            QWidget* widgetWindow = nullptr;
-            for (QWidget* w : tour->getWidgetsByName(tm.widgetName)) {
-                  widgetWindow = w->window();
-                  originalStyles.append(w->styleSheet());
-                  QString windowColor = QApplication::palette().color(QPalette::Window).name();
-                  QString highlightColor = QApplication::palette().color(QPalette::Highlight).name();
-//                  w->setStyleSheet(w->styleSheet() + "background: qradialgradient(cx:0.5, cy:0.5, radius: 0.5,"
-//                                   "fx:0.5, fy:0.5, stop:0 " + highlightColor + ", stop:1 " + windowColor + ");");
-                  }
+            QMessageBox* mbox = new QMessageBox(mscore);            
             mbox->setText(tm.message);
 
-            if (!widgetWindow) {
+            QList<QWidget*> tourWidgets = tour->getWidgetsByName(tm.widgetName);
+            if (tourWidgets.isEmpty())
                   mbox->exec();
-                  }
             else {
-                  positionMessage(tour->getWidgetsByName(tm.widgetName), mbox);
-//                  QPoint displayPoint = getDisplayPoint(tour->getWidgetsByName(tm.widgetName), mbox);
-//                  mbox->move(displayPoint);
-//                  mbox->move(QPoint(200, 200));
+                  OverlayWidget* overlay = new OverlayWidget(tourWidgets);
+                  overlay->setParent(tourWidgets.at(0)->window());
+                  overlay->show();
+
+                  positionMessage(tourWidgets, mbox);
                   mbox->exec();
+
+                  overlay->hide();
                   }
 
-            // Load the original styles
-            for (QWidget* w : tour->getWidgetsByName(tm.widgetName))
-                  w->setStyleSheet(originalStyles.takeFirst());
             }
       }
 

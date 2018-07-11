@@ -5,11 +5,19 @@
 
 namespace Ms {
 
+//---------------------------------------------------------
+//   TourMessage
+//---------------------------------------------------------
+
 struct TourMessage {
   QString message;
   QString widgetName;
   void init(QString m, QString w) { message = m; widgetName = w; }
 };
+
+//---------------------------------------------------------
+//   Tour
+//---------------------------------------------------------
 
 class Tour
       {
@@ -36,6 +44,27 @@ class Tour
       void setCompleted(bool c)     { _completed = c;    }
       bool completed()              { return _completed; }
       };
+
+//---------------------------------------------------------
+//   OverlayWidget
+//---------------------------------------------------------
+
+class OverlayWidget : public QWidget
+      {
+      void newParent();
+      bool eventFilter(QObject * obj, QEvent * ev);
+      virtual bool event(QEvent* ev);
+      virtual void paintEvent(QPaintEvent *);
+
+      QList<QWidget*> widgets;
+
+   public:
+      OverlayWidget(QList<QWidget*> widgetList, QWidget* parent = 0);
+      };
+
+//---------------------------------------------------------
+//   TourHandler
+//---------------------------------------------------------
 
 class TourHandler : public QObject
       {
