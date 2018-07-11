@@ -24,10 +24,11 @@ class Tour
       QList<TourMessage> _messages;
       QMultiMap<QString, QWidget*> nameToWidget;
       QString _tourName;
+      QString _shortcut;
       bool _completed = false;
 
    public:
-      Tour(QString name) { _tourName = name; }
+      Tour(QString name, QString shortcut = "") { _tourName = name; _shortcut = shortcut; }
 
       void addMessage(QString m, QString w) { TourMessage message;
                                               message.init(m, w);
@@ -40,6 +41,9 @@ class Tour
 
       void setTourName(QString n)   { _tourName = n;     }
       QString tourName()            { return _tourName;  }
+
+      void setShortcut(QString s)   { _shortcut = s;     }
+      QString shortcut()            { return _shortcut;   }
 
       void setCompleted(bool c)     { _completed = c;    }
       bool completed()              { return _completed; }
@@ -77,6 +81,7 @@ class TourHandler : public QObject
       static void displayTour(Tour* tour);
       static void positionMessage(QList<QWidget*> widgets, QMessageBox* mbox);
       static QHash<QString, Tour*> allTours;
+      static QHash<QString, Tour*> shortcutToTour;
 
    public:
       TourHandler(QObject* parent);
@@ -90,6 +95,8 @@ class TourHandler : public QObject
 
       static void addWidgetToTour(QString tourName, QWidget* widget, QString widgetName);
       static void clearWidgetsFromTour(QString tourName);
+
+      static QList<QString> allTourShortcuts() { return shortcutToTour.keys(); }
       };
 
 }

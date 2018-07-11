@@ -21,4 +21,8 @@
     <Message widget="accidental-icon">Accidentals can be added to notes by selecting these icons.</Message>
     <Message widget="voice-icon">To change voices, click these number icons.</Message>
     </Tour>
+  <Tour name="mmrest" shortcut="toggle-mmrest">
+    <Message>This should trigger when "M" is pressed.</Message>
+    <Message>It should also trigger when it is pressed in menu.</Message>
+    </Tour>
   </TourCollection>

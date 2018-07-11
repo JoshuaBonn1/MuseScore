@@ -5,6 +5,7 @@
 namespace Ms {
 
 QHash<QString, Tour*> TourHandler::allTours;
+QHash<QString, Tour*> TourHandler::shortcutToTour;
 
 //---------------------------------------------------------
 //   OverlayWidget
@@ -122,7 +123,8 @@ void TourHandler::loadTours()
 void TourHandler::loadTour(XmlReader& tourXml)
       {
       QString tourName = tourXml.attribute("name");
-      Tour* tour = new Tour(tourName);
+      QString shortcut = tourXml.attribute("shortcut");
+      Tour* tour = new Tour(tourName, shortcut);
       while (tourXml.readNextStartElement()) {
             if (tourXml.name() == "Message")
                   tour->addMessage(tourXml.readXml(), tourXml.attribute("widget"));
@@ -131,6 +133,8 @@ void TourHandler::loadTour(XmlReader& tourXml)
             }
 
       allTours[tourName] = tour;
+      if (!shortcut.isEmpty())
+            shortcutToTour[shortcut] = tour;
       }
 
 //---------------------------------------------------------
@@ -226,21 +230,27 @@ void TourHandler::clearWidgetsFromTour(QString tourName)
 
 //---------------------------------------------------------
 //   startTour
+//   lookup string can be a tour name or a shortcut name
 //---------------------------------------------------------
 
-void TourHandler::startTour(QString tourName)
+void TourHandler::startTour(QString lookupString)
       {
       if (!preferences.getBool(PREF_UI_APP_STARTUP_SHOWTOURS))
             return;
-      if (allTours.contains(tourName)) {
-            Tour* tour = allTours.value(tourName);
+      if (allTours.contains(lookupString)) {
+            Tour* tour = allTours.value(lookupString);
             if (tour->completed())
                   return;
             displayTour(tour);
             //tour->setCompleted(true);
             }
-      else
-            qDebug() << tourName << " does not have a tour.";
+      else if (shortcutToTour.contains(lookupString)) {
+            Tour* tour = shortcutToTour.value(lookupString);
+            if (tour->completed())
+                  return;
+            displayTour(tour);
+            //tour->setCompleted(true);
+            }
       }
 
 //---------------------------------------------------------
