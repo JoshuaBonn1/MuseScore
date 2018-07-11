@@ -126,8 +126,19 @@ void TourHandler::loadTour(XmlReader& tourXml)
       QString shortcut = tourXml.attribute("shortcut");
       Tour* tour = new Tour(tourName, shortcut);
       while (tourXml.readNextStartElement()) {
-            if (tourXml.name() == "Message")
-                  tour->addMessage(tourXml.readXml(), tourXml.attribute("widget"));
+            if (tourXml.name() == "Message") {
+                  QString text;
+                  QList<QString> objectNames;
+                  while (tourXml.readNextStartElement()) {
+                        if (tourXml.name() == "Text")
+                              text = tourXml.readXml();
+                        else if (tourXml.name() == "Widget")
+                              objectNames.append(tourXml.readXml());
+                        else
+                              tourXml.unknown();
+                        }
+                  tour->addMessage(text, objectNames);
+                  }
             else
                   tourXml.unknown();
             }
@@ -323,13 +334,33 @@ void TourHandler::positionMessage(QList<QWidget*> widgets, QMessageBox* mbox)
 //   displayTour
 //---------------------------------------------------------
 
+QList<QWidget*> TourHandler::getWidgetsByNames(Tour* tour, QList<QString> names)
+      {
+      QList<QWidget*> widgets;
+      for (QString name : names) {
+            // First check internal storage for widget
+            if (tour->hasNameForWidget(name))
+                  widgets.append(tour->getWidgetsByName(name));
+            else {
+                  // If not found, check all widgets by object name
+                  auto foundWidgets = mscore->findChildren<QWidget*>(name);
+                  widgets.append(foundWidgets);
+                  }
+            }
+      return widgets;
+      }
+
+//---------------------------------------------------------
+//   displayTour
+//---------------------------------------------------------
+
 void TourHandler::displayTour(Tour* tour)
       {
       for (TourMessage tm : tour->messages()) {
             QMessageBox* mbox = new QMessageBox(mscore);            
             mbox->setText(tm.message);
 
-            QList<QWidget*> tourWidgets = tour->getWidgetsByName(tm.widgetName);
+            QList<QWidget*> tourWidgets = getWidgetsByNames(tour, tm.widgetNames);
             if (tourWidgets.isEmpty())
                   mbox->exec();
             else {

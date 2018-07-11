@@ -100,6 +100,7 @@ extern QErrorMessage* errorMessage;
 ScoreView::ScoreView(QWidget* parent)
    : QWidget(parent), editData(this)
       {
+      setObjectName("scoreview");
       setStatusTip("scoreview");
       setAcceptDrops(true);
 #ifndef Q_OS_MAC

@@ -1,28 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TourCollection>
   <Tour name="timeline-tour">
-    <Message>This is a timeline.</Message>
-    <Message>It does stuff, I guess.</Message>
+    <Message>
+      <Text>This is a timeline.</Text>
+      </Message>
+    <Message>
+      <Text>It does stuff, I guess.</Text>
+      </Message>
     </Tour>
   <Tour name="add-slur">
-    <Message>You are adding a slur.</Message>
-    <Message>If the notes are the same, you might want to use a tie.</Message>
+    <Message>
+      <Text>You are adding a slur.</Text>
+      </Message>
+    <Message>
+      <Text>If the notes are the same, you might want to use a tie.</Text>
+      </Message>
     </Tour>
   <Tour name="show-palette">
-    <Message>Here is a palette.</Message>
-    <Message>There are different elements.</Message>
-    <Message>Describe how to use and edit them and stuff.</Message>
+    <Message>
+      <Text>Here is a palette.</Text>
+      </Message>
+    <Message>
+      <Text>There are different elements.</Text>
+      </Message>
+    <Message>
+      <Text>Describe how to use and edit them and stuff.</Text>
+      </Message>
     </Tour>
   <Tour name="note-input">
-    <Message widget="entry-tools">This is the note input toolbar</Message>
-    <Message widget="note-input-icon">To get started, click the note input icon. Or you can press "N".</Message>
-    <Message widget="duration-icon">You can select a duration to add by clicking one of these icons.</Message>
-    <Message widget="rest-icon">To enter rests, select this icon and a duration.</Message>
-    <Message widget="accidental-icon">Accidentals can be added to notes by selecting these icons.</Message>
-    <Message widget="voice-icon">To change voices, click these number icons.</Message>
+    <Message>
+      <Text>This is the note input toolbar</Text>
+      <Widget>entry-tools</Widget>
+      </Message>
+    <Message>
+      <Text>To get started, click the note input icon. Or you can press "N".</Text>
+      <Widget>note-entry-methods</Widget>
+      </Message>
+    <Message>
+      <Text>You can select a duration to add by clicking one of these icons.</Text>
+      </Message>
+    <Message>
+      <Text>To enter rests, select this icon and a duration.</Text>
+      </Message>
+    <Message>
+      <Text>Accidentals can be added to notes by selecting these icons.</Text>
+      </Message>
+    <Message>
+      <Text>To change voices, click these number icons.</Text>
+      </Message>
     </Tour>
   <Tour name="mmrest" shortcut="toggle-mmrest">
-    <Message>This should trigger when "M" is pressed.</Message>
-    <Message>It should also trigger when it is pressed in menu.</Message>
+    <Message>
+      <Text>You have activate multimeasure rests.</Text>
+      <Widget>scoreview</Widget>
+      </Message>
+    <Message>
+      <Text>It should also trigger when it is pressed in menu.</Text>
+      <Widget>scoreview</Widget>
+      </Message>
     </Tour>
   </TourCollection>

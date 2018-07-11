@@ -11,8 +11,8 @@ namespace Ms {
 
 struct TourMessage {
   QString message;
-  QString widgetName;
-  void init(QString m, QString w) { message = m; widgetName = w; }
+  QList<QString> widgetNames;
+  void init(QString m, QList<QString> w) { message = m; widgetNames = w; }
 };
 
 //---------------------------------------------------------
@@ -30,20 +30,21 @@ class Tour
    public:
       Tour(QString name, QString shortcut = "") { _tourName = name; _shortcut = shortcut; }
 
-      void addMessage(QString m, QString w) { TourMessage message;
-                                              message.init(m, w);
-                                              _messages.append(message); }
-      QList<TourMessage> messages()         { return _messages;          }
+      void addMessage(QString m, QList<QString> w) { TourMessage message;
+                                                     message.init(m, w);
+                                                     _messages.append(message); }
+      QList<TourMessage> messages() { return _messages; }
 
-      QList<QWidget*> getWidgetsByName(QString n)  { return nameToWidget.values(n); }
-      void addNameAndWidget(QString n, QWidget* w) { nameToWidget.insert(n, w);    }
-      void clearWidgets()                          { nameToWidget.clear();         }
+      QList<QWidget*> getWidgetsByName(QString n)  { return nameToWidget.values(n);   }
+      void addNameAndWidget(QString n, QWidget* w) { nameToWidget.insert(n, w);       }
+      void clearWidgets()                          { nameToWidget.clear();            }
+      bool hasNameForWidget(QString n)             { return nameToWidget.contains(n); }
 
       void setTourName(QString n)   { _tourName = n;     }
       QString tourName()            { return _tourName;  }
 
       void setShortcut(QString s)   { _shortcut = s;     }
-      QString shortcut()            { return _shortcut;   }
+      QString shortcut()            { return _shortcut;  }
 
       void setCompleted(bool c)     { _completed = c;    }
       bool completed()              { return _completed; }
@@ -82,6 +83,7 @@ class TourHandler : public QObject
       static void positionMessage(QList<QWidget*> widgets, QMessageBox* mbox);
       static QHash<QString, Tour*> allTours;
       static QHash<QString, Tour*> shortcutToTour;
+      static QList<QWidget*> getWidgetsByNames(Tour* tour, QList<QString> names);
 
    public:
       TourHandler(QObject* parent);
