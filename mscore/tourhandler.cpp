@@ -6,6 +6,7 @@ namespace Ms {
 
 QHash<QString, Tour*> TourHandler::allTours;
 QHash<QString, Tour*> TourHandler::shortcutToTour;
+QMap<QString, QMap<QString, QString>*> TourHandler::eventNameLookup;
 
 //---------------------------------------------------------
 //   OverlayWidget
@@ -70,12 +71,15 @@ void OverlayWidget::paintEvent(QPaintEvent *)
       QPainter p(this);
       QWidget* parentWindow = qobject_cast<QWidget*>(parent());
 
+      qDebug() << "Parent window" << parentWindow;
       if (parentWindow)
             painterPath.addRect(parentWindow->rect());
 
       QPainterPath subPath = QPainterPath();
-      for (QWidget* w : widgets)
-            subPath.addRect(QRect(w->mapTo(parentWindow, QPoint(0, 0)), w->size()));
+      for (QWidget* w : widgets) {
+            if (w->isVisible())
+                  subPath.addRect(QRect(w->mapTo(parentWindow, QPoint(0, 0)), w->size()));
+            }
       painterPath -= subPath;
 
       p.fillPath(painterPath, QColor(100, 100, 100, 128));
@@ -130,14 +134,24 @@ void TourHandler::loadTour(XmlReader& tourXml)
                   QString text;
                   QList<QString> objectNames;
                   while (tourXml.readNextStartElement()) {
-                        if (tourXml.name() == "Text")
-                              text = tourXml.readXml();
+                        if (tourXml.name() == "Text") {
+                              QTextDocument doc;
+                              doc.setHtml(tourXml.readXml());
+                              text = doc.toPlainText();
+                              }
                         else if (tourXml.name() == "Widget")
                               objectNames.append(tourXml.readXml());
                         else
                               tourXml.unknown();
                         }
                   tour->addMessage(text, objectNames);
+                  }
+            else if (tourXml.name() == "Event") {
+                  QString name = tourXml.attribute("objectName");
+                  QString event = tourXml.readXml();
+                  if (!eventNameLookup.contains(name))
+                        eventNameLookup.insert(name, new QMap<QString, QString>);
+                  eventNameLookup.value(name)->insert(event, tourName);
                   }
             else
                   tourXml.unknown();
@@ -196,8 +210,14 @@ void TourHandler::writeCompletedTours()
 
 bool TourHandler::eventFilter(QObject* obj, QEvent* event)
       {
-      if (eventHandler->contains(obj) && eventHandler->value(obj)->contains(event->type()))
+      QString eventString = QVariant::fromValue(event->type()).value<QString>();
+
+      if (eventNameLookup.contains(obj->objectName()) &&
+          eventNameLookup.value(obj->objectName())->contains(eventString))
+            startTour(eventNameLookup.value(obj->objectName())->value(eventString));
+      else if (eventHandler->contains(obj) && eventHandler->value(obj)->contains(event->type()))
             startTour(eventHandler->value(obj)->value(event->type()));
+
       return QObject::eventFilter(obj, event);
       }
 

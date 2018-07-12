@@ -33,6 +33,30 @@
       </Message>
     </Tour>
   <Tour name="note-input">
+    <Event objectName="note-entry-methods">MouseButtonRelease</Event>
+    <Event objectName="pad-note-128">MouseButtonRelease</Event>
+    <Event objectName="pad-note-64">MouseButtonRelease</Event>
+    <Event objectName="pad-note-32">MouseButtonRelease</Event>
+    <Event objectName="pad-note-16">MouseButtonRelease</Event>
+    <Event objectName="pad-note-8">MouseButtonRelease</Event>
+    <Event objectName="pad-note-4">MouseButtonRelease</Event>
+    <Event objectName="pad-note-2">MouseButtonRelease</Event>
+    <Event objectName="pad-note-1">MouseButtonRelease</Event>
+    <Event objectName="note-breve">MouseButtonRelease</Event>
+    <Event objectName="note-longa">MouseButtonRelease</Event>
+    <Event objectName="pad-dot">MouseButtonRelease</Event>
+    <Event objectName="pad-dotdot">MouseButtonRelease</Event>
+    <Event objectName="pad-dot3">MouseButtonRelease</Event>
+    <Event objectName="pad-dot4">MouseButtonRelease</Event>
+    <Event objectName="tie">MouseButtonRelease</Event>
+    <Event objectName="pad-rest">MouseButtonRelease</Event>
+    <Event objectName="flip">MouseButtonRelease</Event>
+    <Event objectName="sharp2">MouseButtonRelease</Event>
+    <Event objectName="sharp">MouseButtonRelease</Event>
+    <Event objectName="nat">MouseButtonRelease</Event>
+    <Event objectName="flat">MouseButtonRelease</Event>
+    <Event objectName="flat2">MouseButtonRelease</Event>
+    <Event objectName="voice">MouseButtonRelease</Event>
     <Message>
       <Text>This is the note input toolbar</Text>
       <Widget>entry-tools</Widget>

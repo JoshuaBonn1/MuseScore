@@ -83,6 +83,7 @@ class TourHandler : public QObject
       static void positionMessage(QList<QWidget*> widgets, QMessageBox* mbox);
       static QHash<QString, Tour*> allTours;
       static QHash<QString, Tour*> shortcutToTour;
+      static QMap<QString, QMap<QString, QString>*> eventNameLookup;
       static QList<QWidget*> getWidgetsByNames(Tour* tour, QList<QString> names);
 
    public:

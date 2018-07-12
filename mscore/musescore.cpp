@@ -610,14 +610,12 @@ void MuseScore::populateNoteInputMenu()
                         a->setCheckable(true);
                         // tb->setDefaultAction(a);
                         w = tb;
-//                        TourHandler::addWidgetToTour("note-input", w, "voice-icon");
                         }
                   else {
                         w = new AccessibleToolButton(entryTools, a);
                         w->setObjectName(s);
                         }
                   entryTools->addWidget(w);
-                  _tourHandler->attachTour(w, QEvent::MouseButtonRelease, "note-input");
                   }
             }
       }
