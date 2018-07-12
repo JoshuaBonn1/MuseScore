@@ -3,9 +3,11 @@
   <Tour name="timeline-tour">
     <Message>
       <Text>This is a timeline.</Text>
+      <Widget>Timeline</Widget>
       </Message>
     <Message>
-      <Text>It does stuff, I guess.</Text>
+      <Text>It shows a reduction of the score for easier navigation.</Text>
+      <Widget>Timeline</Widget>x
       </Message>
     </Tour>
   <Tour name="add-slur">
@@ -18,13 +20,16 @@
     </Tour>
   <Tour name="show-palette">
     <Message>
-      <Text>Here is a palette.</Text>
+      <Text>These are palettes.</Text>
+      <Widget>palette-box</Widget>
       </Message>
     <Message>
-      <Text>There are different elements.</Text>
+      <Text>Each palette contains elements that can be added to the score.</Text>
+      <Widget>palette</Widget>
       </Message>
     <Message>
-      <Text>Describe how to use and edit them and stuff.</Text>
+      <Text>To use them, select an element in the score and double click on the palette element.</Text>
+      <Widget>palette-cells</Widget>
       </Message>
     </Tour>
   <Tour name="note-input">
@@ -38,15 +43,36 @@
       </Message>
     <Message>
       <Text>You can select a duration to add by clicking one of these icons.</Text>
+      <Widget>pad-note-128</Widget>
+      <Widget>pad-note-64</Widget>
+      <Widget>pad-note-32</Widget>
+      <Widget>pad-note-16</Widget>
+      <Widget>pad-note-8</Widget>
+      <Widget>pad-note-4</Widget>
+      <Widget>pad-note-2</Widget>
+      <Widget>pad-note-1</Widget>
+      <Widget>note-breve</Widget>
+      <Widget>note-longa</Widget>
+      <Widget>pad-dot</Widget>
+      <Widget>pad-dotdot</Widget>
+      <Widget>pad-dot3</Widget>
+      <Widget>pad-dot4</Widget>
       </Message>
     <Message>
       <Text>To enter rests, select this icon and a duration.</Text>
+      <Widget>pad-rest</Widget>
       </Message>
     <Message>
       <Text>Accidentals can be added to notes by selecting these icons.</Text>
+      <Widget>sharp2</Widget>
+      <Widget>sharp</Widget>
+      <Widget>nat</Widget>
+      <Widget>flat</Widget>
+      <Widget>flat2</Widget>
       </Message>
     <Message>
       <Text>To change voices, click these number icons.</Text>
+      <Widget>voice</Widget>
       </Message>
     </Tour>
   <Tour name="mmrest" shortcut="toggle-mmrest">
