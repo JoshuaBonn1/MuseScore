@@ -405,6 +405,7 @@ void TourHandler::displayTour(Tour* tour)
       {
       int i = 0;
       bool next = true;
+      bool showTours = true;
       QList<TourMessage> tourMessages = tour->messages();
       while (i != tourMessages.size()) {
             // Set up the message box buttons
@@ -429,6 +430,11 @@ void TourHandler::displayTour(Tour* tour)
             // Add text (translation?)
             mbox->setText(tourMessages[i].message);
 
+            // Add "Do not show again" checkbox
+            QCheckBox* showToursBox = new QCheckBox(tr("Do not show me tours"), mbox);
+            showToursBox->setChecked(!showTours);
+            mbox->setCheckBox(showToursBox);
+
             // Display the message box, position it if needed
             QList<QWidget*> tourWidgets = getWidgetsByNames(tour, tourMessages[i].widgetNames);
             OverlayWidget* overlay = new OverlayWidget(tourWidgets);
@@ -441,6 +447,7 @@ void TourHandler::displayTour(Tour* tour)
             overlay->show();
             mbox->exec();
             overlay->hide();
+            showTours = !(showToursBox->isChecked());
 
             // Handle the button presses
             if (mbox->clickedButton() == nextButton) {
@@ -454,6 +461,7 @@ void TourHandler::displayTour(Tour* tour)
             else
                   break;
             }
+      preferences.setPreference(PREF_UI_APP_STARTUP_SHOWTOURS, showTours);
       }
 
 }
