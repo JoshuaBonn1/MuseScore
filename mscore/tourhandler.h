@@ -24,11 +24,10 @@ class Tour
       QList<TourMessage> _messages;
       QMultiMap<QString, QWidget*> nameToWidget;
       QString _tourName;
-      QString _shortcut;
       bool _completed = false;
 
    public:
-      Tour(QString name, QString shortcut = "") { _tourName = name; _shortcut = shortcut; }
+      Tour(QString name) { _tourName = name; }
 
       void addMessage(QString m, QList<QString> w) { TourMessage message;
                                                      message.init(m, w);
@@ -42,9 +41,6 @@ class Tour
 
       void setTourName(QString n)   { _tourName = n;     }
       QString tourName()            { return _tourName;  }
-
-      void setShortcut(QString s)   { _shortcut = s;     }
-      QString shortcut()            { return _shortcut;  }
 
       void setCompleted(bool c)     { _completed = c;    }
       bool completed()              { return _completed; }

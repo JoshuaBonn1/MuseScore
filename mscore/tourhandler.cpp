@@ -1,6 +1,7 @@
 #include "tourhandler.h"
 #include "musescore.h"
 #include "preferences.h"
+#include <QDesktopWidget>
 
 namespace Ms {
 
@@ -70,15 +71,17 @@ void OverlayWidget::paintEvent(QPaintEvent *)
       QPainterPath painterPath = QPainterPath();
       QPainter p(this);
       QWidget* parentWindow = qobject_cast<QWidget*>(parent());
-
-      qDebug() << "Parent window" << parentWindow;
       if (parentWindow)
             painterPath.addRect(parentWindow->rect());
 
       QPainterPath subPath = QPainterPath();
       for (QWidget* w : widgets) {
-            if (w->isVisible())
-                  subPath.addRect(QRect(w->mapTo(parentWindow, QPoint(0, 0)), w->size()));
+            if (w->isVisible()) {
+                  // Add widget and children visible region mapped to the parentWindow
+                  QRegion region = w->visibleRegion() + w->childrenRegion();
+                  region.translate(w->mapTo(parentWindow, QPoint(0, 0)));
+                  subPath.addRegion(region);
+                  }
             }
       painterPath -= subPath;
 
@@ -127,8 +130,8 @@ void TourHandler::loadTours()
 void TourHandler::loadTour(XmlReader& tourXml)
       {
       QString tourName = tourXml.attribute("name");
-      QString shortcut = tourXml.attribute("shortcut");
-      Tour* tour = new Tour(tourName, shortcut);
+      QList<QString> shortcuts;
+      Tour* tour = new Tour(tourName);
       while (tourXml.readNextStartElement()) {
             if (tourXml.name() == "Message") {
                   QString text;
@@ -153,13 +156,16 @@ void TourHandler::loadTour(XmlReader& tourXml)
                         eventNameLookup.insert(name, new QMap<QString, QString>);
                   eventNameLookup.value(name)->insert(event, tourName);
                   }
+            else if (tourXml.name() == "Shortcut") {
+                  shortcuts.append(tourXml.readXml());
+                  }
             else
                   tourXml.unknown();
             }
 
       allTours[tourName] = tour;
-      if (!shortcut.isEmpty())
-            shortcutToTour[shortcut] = tour;
+      for (QString s : shortcuts)
+            shortcutToTour[s] = tour;
       }
 
 //---------------------------------------------------------
@@ -273,14 +279,14 @@ void TourHandler::startTour(QString lookupString)
             if (tour->completed())
                   return;
             displayTour(tour);
-            //tour->setCompleted(true);
+//            tour->setCompleted(true);
             }
       else if (shortcutToTour.contains(lookupString)) {
             Tour* tour = shortcutToTour.value(lookupString);
             if (tour->completed())
                   return;
             displayTour(tour);
-            //tour->setCompleted(true);
+//            tour->setCompleted(true);
             }
       }
 
@@ -292,21 +298,33 @@ void TourHandler::positionMessage(QList<QWidget*> widgets, QMessageBox* mbox)
       {
       // Loads some information into the size of the mbox, a bit of a hack
       mbox->show();
+
       // Create a "box" to see where the msgbox should go
-      QSize s = widgets.at(0)->frameSize();
-      QPoint topLeft = widgets.at(0)->mapToGlobal(QPoint(0, 0));
-      QPoint bottomRight = widgets.at(0)->mapToGlobal(QPoint(s.width(), s.height()));
+      bool set = false;
+      QPoint topLeft;
+      QPoint bottomRight;
 
       for (QWidget* w : widgets) {
+            if (!w->isVisible())
+                  continue;
             QSize size = w->frameSize();
             QPoint wTopLeft = w->mapToGlobal(QPoint(0, 0));
             QPoint wBottomRight = w->mapToGlobal(QPoint(size.width(), size.height()));
 
-            topLeft.setX(qMin(topLeft.x(), wTopLeft.x()));
-            topLeft.setY(qMin(topLeft.y(), wTopLeft.y()));
-            bottomRight.setX(qMax(bottomRight.x(), wBottomRight.x()));
-            bottomRight.setY(qMax(bottomRight.y(), wBottomRight.y()));
+            if (!set) {
+                  topLeft = wTopLeft;
+                  bottomRight = wBottomRight;
+                  set = true;
+                  }
+            else {
+                  topLeft.setX(qMin(topLeft.x(), wTopLeft.x()));
+                  topLeft.setY(qMin(topLeft.y(), wTopLeft.y()));
+                  bottomRight.setX(qMax(bottomRight.x(), wBottomRight.x()));
+                  bottomRight.setY(qMax(bottomRight.y(), wBottomRight.y()));
+                  }
             }
+      if (!set)
+            return; // Should display in center
       QRect widgetsBox(topLeft, bottomRight);
 
       // Next find where the mbox goes around the widgetsBox
@@ -347,6 +365,13 @@ void TourHandler::positionMessage(QList<QWidget*> widgets, QMessageBox* mbox)
             displayPoint.setY(y);
             }
 
+      // Make sure the box is within the screen
+      QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
+      displayPoint.setX(qMax(displayPoint.x(), 0));
+      displayPoint.setY(qMax(displayPoint.y(), 0));
+      displayPoint.setX(qMin(displayPoint.x(), screenGeometry.width() - mbox->size().width()));
+      displayPoint.setY(qMin(displayPoint.y(), screenGeometry.height() - mbox->size().height() - 15));
+
       mbox->move(displayPoint);
       }
 
@@ -376,24 +401,56 @@ QList<QWidget*> TourHandler::getWidgetsByNames(Tour* tour, QList<QString> names)
 
 void TourHandler::displayTour(Tour* tour)
       {
-      for (TourMessage tm : tour->messages()) {
-            QMessageBox* mbox = new QMessageBox(mscore);            
-            mbox->setText(tm.message);
+      int i = 0;
+      bool next = true;
+      QList<TourMessage> tourMessages = tour->messages();
+      while (i != tourMessages.size()) {
+            // Set up the message box buttons
+            QMessageBox* mbox = new QMessageBox(mscore);
+            QPushButton* backButton = nullptr;
+            QPushButton* nextButton = nullptr;
 
-            QList<QWidget*> tourWidgets = getWidgetsByNames(tour, tm.widgetNames);
+            mbox->addButton(tr("Close"), QMessageBox::RejectRole);
+            if (i != 0)
+                  backButton = mbox->addButton(tr("< Back"), QMessageBox::NoRole);
+            if (i != tourMessages.size() - 1)
+                  nextButton = mbox->addButton(tr("Next >"), QMessageBox::YesRole);
+            else
+                  nextButton = mbox->addButton(tr("End"), QMessageBox::YesRole);
+
+            // Sets default to last pressed button
+            if (next)
+                  mbox->setDefaultButton(nextButton);
+            else
+                  mbox->setDefaultButton(backButton);
+
+            // Add text (translation?)
+            mbox->setText(tourMessages[i].message);
+
+            // Display the message box, position it if needed
+            QList<QWidget*> tourWidgets = getWidgetsByNames(tour, tourMessages[i].widgetNames);
+            OverlayWidget* overlay = new OverlayWidget(tourWidgets);
             if (tourWidgets.isEmpty())
-                  mbox->exec();
+                  overlay->setParent(mscore);
             else {
-                  OverlayWidget* overlay = new OverlayWidget(tourWidgets);
                   overlay->setParent(tourWidgets.at(0)->window());
-                  overlay->show();
-
                   positionMessage(tourWidgets, mbox);
-                  mbox->exec();
-
-                  overlay->hide();
                   }
+            overlay->show();
+            mbox->exec();
+            overlay->hide();
 
+            // Handle the button presses
+            if (mbox->clickedButton() == nextButton) {
+                  i++;
+                  next = true;
+                  }
+            else if (mbox->clickedButton() == backButton) {
+                  i--;
+                  next = false;
+                  }
+            else
+                  break;
             }
       }
 

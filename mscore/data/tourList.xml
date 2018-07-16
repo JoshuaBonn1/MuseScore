@@ -7,7 +7,7 @@
       </Message>
     <Message>
       <Text>It shows a reduction of the score for easier navigation.</Text>
-      <Widget>Timeline</Widget>x
+      <Widget>Timeline</Widget>
       </Message>
     </Tour>
   <Tour name="add-slur">
@@ -99,7 +99,8 @@
       <Widget>voice</Widget>
       </Message>
     </Tour>
-  <Tour name="mmrest" shortcut="toggle-mmrest">
+  <Tour name="mmrest">
+    <Shortcut>toggle-mmrest</Shortcut>
     <Message>
       <Text>You have activate multimeasure rests.</Text>
       <Widget>scoreview</Widget>
