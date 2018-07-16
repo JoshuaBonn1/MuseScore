@@ -104,19 +104,22 @@ TourHandler::TourHandler(QObject* parent)
 
 void TourHandler::loadTours()
       {
-      QString tourFileLocation = ":/data/tourList.xml";
-      QFile* tourFile = new QFile(tourFileLocation);
-      tourFile->open(QIODevice::ReadOnly);
-      XmlReader tourXml(tourFile);
+      QStringList nameFilters;
+      nameFilters << "*.tour";
+      QString path = mscoreGlobalShare + "tours";
 
-      while (tourXml.readNextStartElement()) {
-            if (tourXml.name() == "TourCollection") {
-                  while (tourXml.readNextStartElement()) {
-                        if (tourXml.name() == "Tour")
-                              loadTour(tourXml);
-                        else
-                              tourXml.unknown();
-                        }
+      QDir dir(path);
+      QStringList pl = dir.entryList(nameFilters, QDir::Files, QDir::Name);
+
+      for (const QString& entry : pl) {
+            QFile* tourFile = new QFile(path + "/" + entry);
+            tourFile->open(QIODevice::ReadOnly);
+            XmlReader tourXml(tourFile);
+            while (tourXml.readNextStartElement()) {
+                  if (tourXml.name() == "Tour")
+                        loadTour(tourXml);
+                  else
+                        tourXml.unknown();
                   }
             }
 

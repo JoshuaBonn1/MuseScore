@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tour name="add-slur">
+  <Message>
+    <Text>You are adding a slur.</Text>
+    </Message>
+  <Message>
+    <Text>If the notes are the same, you might want to use a tie.</Text>
+    </Message>
+  </Tour>

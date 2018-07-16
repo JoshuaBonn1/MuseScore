@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tour name="timeline-tour">
+  <Message>
+    <Text>This is a timeline.</Text>
+    <Widget>Timeline</Widget>
+    </Message>
+  <Message>
+    <Text>It shows a reduction of the score for easier navigation.</Text>
+    <Widget>Timeline</Widget>
+    </Message>
+  </Tour>

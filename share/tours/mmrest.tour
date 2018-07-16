@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tour name="mmrest">
+  <Shortcut>toggle-mmrest</Shortcut>
+  <Message>
+    <Text>You have activate multimeasure rests.</Text>
+    <Widget>scoreview</Widget>
+    </Message>
+  <Message>
+    <Text>It should also trigger when it is pressed in menu.</Text>
+    <Widget>scoreview</Widget>
+    </Message>
+  </Tour>
