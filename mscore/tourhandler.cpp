@@ -1,7 +1,6 @@
 #include "tourhandler.h"
 #include "musescore.h"
 #include "preferences.h"
-#include <QDesktopWidget>
 
 namespace Ms {
 
