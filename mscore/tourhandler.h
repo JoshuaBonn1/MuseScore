@@ -9,41 +9,13 @@ namespace Ms {
 //   TourMessage
 //---------------------------------------------------------
 
-struct TourMessage {
+struct TourMessage
+      {
       QString message;
       QList<QString> widgetNames;
       TourMessage(QString m, QList<QString> w) : message(m), widgetNames(w) {}
       };
 
-//---------------------------------------------------------
-//   Tour
-//---------------------------------------------------------
-
-class Tour
-      {
-      QList<TourMessage> _messages;
-      QMultiMap<QString, QWidget*> nameToWidget;
-      QString _tourName;
-      bool _completed = false;
-
-   public:
-      Tour(QString name) { _tourName = name; }
-
-      void addMessage(QString m, QList<QString> w) { TourMessage message(m, w);
-                                                     _messages.append(message); }
-      QList<TourMessage> messages() { return _messages; }
-
-      QList<QWidget*> getWidgetsByName(QString n)  { return nameToWidget.values(n);   }
-      void addNameAndWidget(QString n, QWidget* w) { nameToWidget.insert(n, w);       }
-      void clearWidgets()                          { nameToWidget.clear();            }
-      bool hasNameForWidget(QString n)             { return nameToWidget.contains(n); }
-
-      void setTourName(QString n) { _tourName = n;     }
-      QString tourName()          { return _tourName;  }
-
-      void setCompleted(bool c)   { _completed = c;    }
-      bool completed()            { return _completed; }
-      };
 
 //---------------------------------------------------------
 //   OverlayWidget
@@ -63,6 +35,55 @@ class OverlayWidget : public QWidget
       };
 
 //---------------------------------------------------------
+//   TourPage
+//---------------------------------------------------------
+
+class TourPage : public QWizardPage
+      {
+   public:
+      TourPage(QWidget* parent, TourMessage tourMessage);
+      };
+
+//---------------------------------------------------------
+//   Tour
+//---------------------------------------------------------
+
+class Tour : public QWizard
+      {
+      Q_OBJECT
+
+      QList<TourMessage> _messages;
+      QMultiMap<QString, QWidget*> nameToWidget;
+      QString _tourName;
+      bool _completed = false;
+      OverlayWidget* _overlay = nullptr;
+
+   private slots:
+      void updateOverlay(int newId);
+
+   public:
+      Tour(QString name) { _tourName = name;
+                           connect(this, SIGNAL(currentIdChanged(int)), SLOT(updateOverlay(int))); }
+
+      void addMessage(QString m, QList<QString> w);
+      QList<TourMessage> messages() { return _messages; }
+
+      QList<QWidget*> getWidgetsByName(QString n)  { return nameToWidget.values(n);   }
+      void addNameAndWidget(QString n, QWidget* w) { nameToWidget.insert(n, w);       }
+      void clearWidgets()                          { nameToWidget.clear();            }
+      bool hasNameForWidget(QString n)             { return nameToWidget.contains(n); }
+
+      void setTourName(QString n) { _tourName = n;     }
+      QString tourName()          { return _tourName;  }
+
+      void setCompleted(bool c)   { _completed = c;    }
+      bool completed()            { return _completed; }
+
+      void positionMessage(QList<QWidget*> widgets, TourPage* tourPage);
+      QList<QWidget*> getWidgetsByNames(QList<QString> names);
+      };
+
+//---------------------------------------------------------
 //   TourHandler
 //---------------------------------------------------------
 
@@ -74,19 +95,16 @@ class TourHandler : public QObject
 
       void loadTour(XmlReader& tourXml);
 
-      static void displayTour(Tour* tour);
-      static void positionMessage(QList<QWidget*> widgets, QMessageBox* mbox);
       static QHash<QString, Tour*> allTours;
       static QHash<QString, Tour*> shortcutToTour;
       static QMap<QString, QMap<QString, QString>*> eventNameLookup;
-      static QList<QWidget*> getWidgetsByNames(Tour* tour, QList<QString> names);
 
       bool delayedWelcomeTour = false;
 
-public slots:
+   public slots:
       void showWelcomeTour();
 
-public:
+   public:
       TourHandler(QObject* parent) : QObject(parent) {}
       void loadTours();
       void resetCompletedTours();
