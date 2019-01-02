@@ -79,7 +79,6 @@ class Tour : public QWizard
       void setCompleted(bool c)   { _completed = c;    }
       bool completed()            { return _completed; }
 
-      void positionMessage(QList<QWidget*> widgets, TourPage* tourPage);
       QList<QWidget*> getWidgetsByNames(QList<QString> names);
       };
 

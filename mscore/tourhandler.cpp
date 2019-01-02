@@ -15,10 +15,8 @@ QMap<QString, QMap<QString, QString>*> TourHandler::eventNameLookup;
 TourPage::TourPage(QWidget* parent, TourMessage tourMessage)
       : QWizardPage(parent)
       {
-//      _overlay = new OverlayWidget(_widgets, this);
-//      _widgets = widgets;
-
       setTitle(tr("Tour"));
+
       QLabel* label = new QLabel(tourMessage.message, this);
       label->setWordWrap(true);
       QVBoxLayout* layout = new QVBoxLayout(this);
@@ -27,6 +25,10 @@ TourPage::TourPage(QWidget* parent, TourMessage tourMessage)
       setLayout(layout);
       }
 
+//---------------------------------------------------------
+//   addMessage
+//---------------------------------------------------------
+
 void Tour::addMessage(QString m, QList<QString> w)
       {
       TourMessage message(m, w);
@@ -34,10 +36,18 @@ void Tour::addMessage(QString m, QList<QString> w)
       addPage(new TourPage(this, message));
       }
 
+//---------------------------------------------------------
+//   updateOverlay
+//---------------------------------------------------------
+
 void Tour::updateOverlay(int newId)
       {
       if (_overlay)
             _overlay->hide();
+
+      // Closed
+      if (newId == -1)
+            return;
 
       QList<QWidget*> newWidgets = getWidgetsByNames(_messages[newId].widgetNames);
       _overlay = new OverlayWidget(newWidgets);
@@ -50,6 +60,27 @@ void Tour::updateOverlay(int newId)
       connect(this, SIGNAL(finished(int)), _overlay, SLOT(hide()));
       _overlay->show();
       }
+
+//---------------------------------------------------------
+//   getWidgetsByNames
+//---------------------------------------------------------
+
+QList<QWidget*> Tour::getWidgetsByNames(QList<QString> names)
+      {
+      QList<QWidget*> widgets;
+      for (QString name : names) {
+            // First check internal storage for widget
+            if (hasNameForWidget(name))
+                  widgets.append(getWidgetsByName(name));
+            else {
+                  // If not found, check all widgets by object name
+                  auto foundWidgets = mscore->findChildren<QWidget*>(name);
+                  widgets.append(foundWidgets);
+                  }
+            }
+      return widgets;
+      }
+
 
 //---------------------------------------------------------
 //   OverlayWidget
@@ -190,6 +221,7 @@ void TourHandler::loadTour(XmlReader& tourXml)
       QString tourName = tourXml.attribute("name");
       QList<QString> shortcuts;
       Tour* tour = new Tour(tourName);
+      tour->setParent(mscore);
       while (tourXml.readNextStartElement()) {
             if (tourXml.name() == "Message") {
                   QString text;
@@ -357,178 +389,5 @@ void TourHandler::startTour(QString lookupString)
             tour->setCompleted(true);
             }
       }
-
-//---------------------------------------------------------
-//   positionMessage
-//---------------------------------------------------------
-
-void Tour::positionMessage(QList<QWidget*> widgets, TourPage* tourPage)
-      {
-      // Loads some information into the size of the mbox, a bit of a hack
-      tourPage->show();
-
-      // Create a "box" to see where the msgbox should go
-      bool set = false;
-      QRect widgetsBox;
-
-      for (QWidget* w : widgets) {
-            if (w->visibleRegion().isEmpty())
-                  continue;
-            QRect boundingRect = w->visibleRegion().boundingRect();
-            QPoint topLeft = w->mapToGlobal(QPoint(0, 0));
-            QPoint bottomRight = w->mapToGlobal(boundingRect.bottomRight());
-
-            if (!set) {
-                  widgetsBox.setTopLeft(topLeft);
-                  widgetsBox.setBottomRight(bottomRight);
-                  set = true;
-                  }
-            else {
-                  widgetsBox.setTop(qMin(widgetsBox.top(), topLeft.y()));
-                  widgetsBox.setLeft(qMin(widgetsBox.left(), topLeft.x()));
-                  widgetsBox.setBottom(qMax(widgetsBox.bottom(), bottomRight.y()));
-                  widgetsBox.setRight(qMax(widgetsBox.right(), bottomRight.x()));
-                  }
-            }
-      if (!set)
-            return; // Should display in center
-
-      // Next find where the mbox goes around the widgetsBox
-      QWidget* mainWindow = widgets.at(0)->window();
-      int midX = mainWindow->mapToGlobal(QPoint(mainWindow->frameGeometry().width() / 2, 0)).x();
-      int midY = mainWindow->mapToGlobal(QPoint(0, mainWindow->frameGeometry().height() / 2)).y();
-
-      // The longer side decides which side the mbox goes on.
-      bool topBottom = (widgetsBox.height() < widgetsBox.width());
-
-      // Calculate the topLeft point for the mbox
-      QPoint displayPoint(0, 0);
-      if (topBottom) {
-            bool displayAbove = (widgetsBox.center().y() > midY);
-            if (displayAbove) {
-                  int mBoxHeight = tourPage->size().height() + 15; // hack
-                  int y = widgetsBox.top();
-                  displayPoint.setY(y - mBoxHeight);
-                  }
-            else
-                  displayPoint.setY(widgetsBox.bottom());
-
-            int x = (int) (widgetsBox.width() - tourPage->size().width()) / 2 + widgetsBox.left();
-            displayPoint.setX(x);
-            }
-      else {
-            bool displayLeft = (widgetsBox.center().x() > midX);
-            if (displayLeft) {
-                  int mBoxWidth = tourPage->size().width();
-                  int x = widgetsBox.left();
-                  displayPoint.setX(x - mBoxWidth);
-                  }
-            else
-                  displayPoint.setX(widgetsBox.right());
-
-            int y = (widgetsBox.height() - tourPage->size().height()) / 2 + widgetsBox.top();
-            displayPoint.setY(y);
-            }
-
-      // Make sure the box is within the screen
-      QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
-      displayPoint.setX(qMax(displayPoint.x(), 0));
-      displayPoint.setY(qMax(displayPoint.y(), 0));
-      displayPoint.setX(qMin(displayPoint.x(), screenGeometry.width() - tourPage->size().width()));
-      displayPoint.setY(qMin(displayPoint.y(), screenGeometry.height() - tourPage->size().height() - 15));
-
-      tourPage->move(displayPoint);
-      }
-
-//---------------------------------------------------------
-//   getWidgetsByNames
-//---------------------------------------------------------
-
-QList<QWidget*> Tour::getWidgetsByNames(QList<QString> names)
-      {
-      QList<QWidget*> widgets;
-      for (QString name : names) {
-            // First check internal storage for widget
-            if (hasNameForWidget(name))
-                  widgets.append(getWidgetsByName(name));
-            else {
-                  // If not found, check all widgets by object name
-                  auto foundWidgets = mscore->findChildren<QWidget*>(name);
-                  widgets.append(foundWidgets);
-                  }
-            }
-      return widgets;
-      }
-
-//---------------------------------------------------------
-//   displayTour
-//---------------------------------------------------------
-
-//void Tour::displayTour()
-//      {
-//      int i = 0;
-//      bool next = true;
-//      bool showTours = true;
-//      QList<TourMessage> tourMessages = messages();
-//      while (i != tourMessages.size()) {
-//            // Set up the message box buttons
-//            QMessageBox* mbox = new QMessageBox(mscore);
-//            mbox->setWindowTitle(tr("Tour"));
-//            QPushButton* backButton = nullptr;
-//            QPushButton* nextButton = nullptr;
-//            QPushButton* closeButton = nullptr;
-
-//            //QMessageBox doesn't support next/back semantic for various OS styles. QWizard does.
-//            closeButton = mbox->addButton(tr("Close"), QMessageBox::RejectRole);
-//            if (i != 0)
-//                  backButton = mbox->addButton(tr("Back"), QMessageBox::NoRole); //Explicit text is bad since it varies depending on the OS. MacOS uses "Go back"
-//            if (i != tourMessages.size() - 1)
-//                  nextButton = mbox->addButton(tr("Next"), QMessageBox::YesRole); //MacOS uses "Continue"
-//            else
-//                  nextButton = mbox->addButton(tr("End"), QMessageBox::YesRole); // MacOS uses "Done"
-
-//            // Sets default to last pressed button
-//            if (next)
-//                  mbox->setDefaultButton(nextButton);
-//            else
-//                  mbox->setDefaultButton(backButton);
-//            mbox->setEscapeButton(closeButton);
-
-//            // Add text (translation?)
-//            mbox->setText(tourMessages[i].message);
-
-//            // Add checkbox to show tours
-//            QCheckBox* showToursBox = new QCheckBox(tr("Continue showing tours"), mbox);
-//            showToursBox->setChecked(showTours);
-//            mbox->setCheckBox(showToursBox);
-
-//            // Display the message box, position it if needed
-//            QList<QWidget*> tourWidgets = getWidgetsByNames(tour, tourMessages[i].widgetNames);
-//            OverlayWidget* overlay = new OverlayWidget(tourWidgets);
-//            if (tourWidgets.isEmpty())
-//                  overlay->setParent(mscore);
-//            else {
-//                  overlay->setParent(tourWidgets.at(0)->window());
-//                  positionMessage(tourWidgets, mbox);
-//                  }
-//            overlay->show();
-//            mbox->exec();
-//            overlay->hide();
-//            showTours = showToursBox->isChecked();
-
-//            // Handle the button presses
-//            if (mbox->clickedButton() == nextButton) {
-//                  i++;
-//                  next = true;
-//                  }
-//            else if (mbox->clickedButton() == backButton) {
-//                  i--;
-//                  next = false;
-//                  }
-//            else
-//                  break;
-//            }
-//      preferences.setPreference(PREF_UI_APP_STARTUP_SHOWTOURS, showTours);
-//      }
 
 }
