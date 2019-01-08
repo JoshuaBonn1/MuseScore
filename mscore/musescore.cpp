@@ -529,6 +529,8 @@ void MuseScore::preferencesChanged(bool fromWorkspace)
       newWizard = 0;
       reloadInstrumentTemplates();
       updateInstrumentDialog();
+      if (timeline())
+            timeline()->updateTimeline();
       }
 
 //---------------------------------------------------------
@@ -1082,7 +1084,7 @@ MuseScore::MuseScore()
       scorePageLayoutChanged();
       showNavigator(preferences.getBool(PREF_UI_APP_STARTUP_SHOWNAVIGATOR));
 
-      _timeline = new TDockWidget;
+      _timeline = new Timeline(this);
       _timeline->setFocusPolicy(Qt::NoFocus);
       addDockWidget(Qt::BottomDockWidgetArea, _timeline);
       scorePageLayoutChanged();
@@ -2138,14 +2140,14 @@ void MuseScore::selectionChanged(SelState selectionState)
             pianorollEditor->changeSelection(selectionState);
       if (drumrollEditor)
             drumrollEditor->changeSelection(selectionState);
-      if (timeline())
-            timeline()->changeSelection(selectionState);
       if (_pianoTools && _pianoTools->isVisible()) {
             if (cs)
                   _pianoTools->changeSelection(cs->selection());
             else
                   _pianoTools->clearSelection();
             }
+      if (_timeline)
+            _timeline->updateSelection();
       if (_inspector)
             updateInspector();
       }
@@ -4131,8 +4133,8 @@ void MuseScore::changeState(ScoreState val)
             if (e->isTextBase()) {
                   textTools()->updateTools(cv->getEditData());
                   if (!(e->isFiguredBass() || e->isHarmony())) {  // do not show text tools for f.b.
-                        if (timelineScrollArea() && timelineScrollArea()->isVisible()) {
-                              if (dockWidgetArea(timelineScrollArea()) != dockWidgetArea(textTools()) || timelineScrollArea()->isFloating()) {
+                        if (timeline() && timeline()->isVisible()) {
+                              if (dockWidgetArea(timeline()) != dockWidgetArea(textTools()) || timeline()->isFloating()) {
                                     QSizePolicy policy(QSizePolicy::Maximum, QSizePolicy::Maximum);
                                     textTools()->widget()->setSizePolicy(policy);
                                     }
@@ -4145,8 +4147,8 @@ void MuseScore::changeState(ScoreState val)
                               QSizePolicy policy(QSizePolicy::Maximum, QSizePolicy::Maximum);
                               textTools()->widget()->setSizePolicy(policy);
                               }
-                        if (timelineScrollArea())
-                              splitDockWidget(textTools(), timelineScrollArea(), Qt::Vertical);
+                        if (timeline())
+                              splitDockWidget(textTools(), timeline(), Qt::Vertical);
                         textTools()->show();
                         }
                   }
@@ -5617,8 +5619,6 @@ void MuseScore::cmd(QAction* a)
 
 void MuseScore::endCmd()
       {
-      if (timeline())
-            timeline()->updateGrid();
       if (MScore::_error != MS_NO_ERROR)
             showError();
       if (cs) {
@@ -6137,21 +6137,6 @@ Navigator* MuseScore::navigator() const
       }
 
 //---------------------------------------------------------
-//   timeline
-//---------------------------------------------------------
-
-Timeline* MuseScore::timeline() const
-      {
-      if (_timeline) {
-            QSplitter* s = static_cast<QSplitter *>(_timeline->widget());
-            if (s && s->count() > 0)
-                  return _timeline ? static_cast<Timeline*>(s->widget(1)) : 0;
-            return 0;
-            }
-      return 0;
-      }
-
-//---------------------------------------------------------
 //   getSearchDialog
 //---------------------------------------------------------
 
@@ -6320,8 +6305,8 @@ void MuseScore::showDrumTools(const Drumset* drumset, Staff* staff)
                   _drumTools = new DrumTools(this);
                   addDockWidget(Qt::BottomDockWidgetArea, _drumTools);
                   }
-            if (timelineScrollArea())
-                  splitDockWidget(_drumTools, timelineScrollArea(), Qt::Vertical);
+            if (timeline())
+                  splitDockWidget(_drumTools, timeline(), Qt::Vertical);
             _drumTools->setDrumset(cs, staff, drumset);
             _drumTools->show();
             }
